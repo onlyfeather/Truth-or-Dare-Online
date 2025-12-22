@@ -228,11 +228,11 @@ app.delete('/api/admin/penalties/:id', adminAuth, async (req, res) => {
 
 // 12. 创建新分类
 app.post('/api/admin/categories', adminAuth, async (req, res) => {
-  const { name } = req.body;
+  const { name, description } = req.body;
   if (!name) return res.status(400).json({ error: "分类名称不能为空" });
   try {
     const category = await prisma.category.create({
-      data: { name }
+      data: { name, description }
     });
     res.json({ success: true, data: category });
   } catch (e) {
@@ -288,6 +288,7 @@ app.get('/api/admin/categories-stats', adminAuth, async (req, res) => {
     const data = categories.map(c => ({
       id: c.id,
       name: c.name,
+      description: c.description || '',
       count: c._count.penalties
     }));
     res.json(data);
@@ -323,13 +324,13 @@ app.delete('/api/admin/categories/:id', adminAuth, async (req, res) => {
 // 16. 更新分类名称
 app.put('/api/admin/categories/:id', adminAuth, async (req, res) => {
   const { id } = req.params;
-  const { name } = req.body;
+  const { name, description } = req.body;
   if (!name) return res.status(400).json({ error: "名称不能为空" });
   
   try {
     await prisma.category.update({
       where: { id: parseInt(id) },
-      data: { name }
+      data: { name, description }
     });
     res.json({ success: true });
   } catch (e) {

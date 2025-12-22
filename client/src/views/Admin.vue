@@ -14,17 +14,32 @@
     </transition>
 
     <transition name="fade">
-      <div v-if="modal.show" class="fixed inset-0 z-[10000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-gray-800 w-full max-w-sm rounded-2xl shadow-2xl border border-gray-700 p-6 animate-scale-in text-center">
-          <div class="text-5xl mb-4">{{ modal.icon }}</div>
-          <h3 class="text-xl font-bold text-white mb-2">{{ modal.title }}</h3>
-          <p class="text-sm text-gray-400 mb-6 leading-relaxed">{{ modal.content }}</p>
-          <div class="flex gap-3">
-            <button @click="modal.show = false" class="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-xl font-bold transition">取消</button>
-            <button @click="handleModalConfirm" :class="['flex-1 py-3 text-white rounded-xl font-bold shadow-lg transition', modal.isDestructive ? 'bg-gradient-to-r from-red-600 to-orange-600 hover:opacity-90' : 'bg-gradient-to-r from-green-600 to-teal-600 hover:opacity-90']">确定</button>
-          </div>
+        <div v-if="showCategoryModal" class="fixed inset-0 z-[9000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-gray-800 w-full max-w-sm rounded-2xl border border-gray-700 p-6 animate-scale-in">
+            <h3 class="text-lg font-bold text-white mb-4">🏷️ {{ isEditingCategory ? '编辑分类' : '新增分类' }}</h3>
+            
+            <label class="text-[10px] text-gray-500 mb-1 block uppercase font-bold">分类名称</label>
+            <input 
+                v-model="categoryForm.name" 
+                placeholder="例如：情侣专属" 
+                class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white mb-4 focus:border-purple-500 outline-none"
+            >
+
+            <label class="text-[10px] text-gray-500 mb-1 block uppercase font-bold">分类介绍</label>
+            <textarea 
+                v-model="categoryForm.description" 
+                placeholder="简要描述一下这个分类的应用场景..." 
+                class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white mb-6 focus:border-purple-500 outline-none resize-none h-24 text-sm"
+            ></textarea>
+
+            <div class="flex gap-3">
+                <button @click="showCategoryModal = false" class="flex-1 py-2 bg-gray-700 rounded-lg text-sm font-bold text-gray-300">取消</button>
+                <button @click="submitCategory" class="flex-1 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg text-sm font-bold text-white">
+                {{ isEditingCategory ? '保存修改' : '立即创建' }}
+                </button>
+            </div>
+            </div>
         </div>
-      </div>
     </transition>
 
     <div v-if="isLoading" class="fixed inset-0 bg-[#0a0c10]/70 backdrop-blur-[2px] z-[5000] flex items-center justify-center cursor-wait"><div class="w-12 h-12 border-4 border-pink-500 border-t-transparent rounded-full animate-spin"></div></div>
@@ -231,8 +246,11 @@
              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                <div v-for="cat in categories" :key="cat.id" class="bg-gray-900/60 border border-gray-700/50 p-5 rounded-xl hover:border-blue-500/30 transition flex justify-between items-center group">
                  <div>
-                   <h3 class="font-bold text-lg text-white group-hover:text-blue-400 transition">{{ cat.name }}</h3>
-                   <div class="text-xs text-gray-500 mt-1">包含 {{ cat.count || 0 }} 道题目</div>
+                   <div>
+                      <h3 class="font-bold text-lg text-white group-hover:text-blue-400 transition">{{ cat.name }}</h3>
+                      <p class="text-xs text-gray-400 mt-1 line-clamp-1 italic">{{ cat.description || '暂无介绍' }}</p>
+                      <div class="text-[10px] text-gray-600 mt-2 font-mono">包含 {{ cat.count || 0 }} 道题目</div>
+                    </div>
                  </div>
                  <div class="flex gap-2 opacity-80 group-hover:opacity-100 transition">
                     <button @click="openEditCategory(cat)" class="w-8 h-8 flex items-center justify-center bg-gray-800 text-gray-400 hover:bg-blue-900/30 hover:text-blue-400 rounded-lg transition" title="重命名">✏️</button>
@@ -364,7 +382,7 @@ const pageSize = 20;
 
 // 弹窗状态
 const showCategoryModal = ref(false);
-const categoryForm = ref({ id: null, name: '' });
+const categoryForm = ref({ id: null, name: '', description: '' });
 const isEditingCategory = ref(false);
 
 const showEditPenaltyModal = ref(false);
@@ -495,13 +513,17 @@ const fetchPenalties = async () => {
 // 分类管理操作
 const openCreateCategory = () => {
   isEditingCategory.value = false;
-  categoryForm.value = { id: null, name: '' };
+  categoryForm.value = { id: null, name: '', description: '' }; // 重置
   showCategoryModal.value = true;
 };
 
 const openEditCategory = (cat) => {
   isEditingCategory.value = true;
-  categoryForm.value = { id: cat.id, name: cat.name };
+  categoryForm.value = { 
+    id: cat.id, 
+    name: cat.name, 
+    description: cat.description || '' // 🟢 赋值
+  };
   showCategoryModal.value = true;
 };
 
@@ -509,16 +531,20 @@ const submitCategory = async () => {
   if (!categoryForm.value.name.trim()) return showToast('error', '失败', '名称不能为空');
   isLoading.value = true;
   try {
+    const payload = { 
+      name: categoryForm.value.name, 
+      description: categoryForm.value.description // 🟢 包含描述
+    };
     if (isEditingCategory.value) {
-      await api.put(`/admin/categories/${categoryForm.value.id}`, { name: categoryForm.value.name });
-      showToast('success', '修改成功', '分类名称已更新');
+      await api.put(`/admin/categories/${categoryForm.value.id}`, payload);
+      showToast('success', '修改成功', '分类已更新');
     } else {
-      await api.post('/admin/categories', { name: categoryForm.value.name });
+      await api.post('/admin/categories', payload);
       showToast('success', '创建成功', '新分类已添加');
     }
     showCategoryModal.value = false;
     fetchCategoriesStats();
-  } catch (e) { showToast('error', '失败', '操作失败，可能名称重复'); }
+  } catch (e) { showToast('error', '失败', '操作失败'); }
   finally { isLoading.value = false; }
 };
 
