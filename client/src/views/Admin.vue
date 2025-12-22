@@ -379,18 +379,6 @@ const displayStats = computed(() => ({
 }));
 const batchPreviewCount = computed(() => batchForm.value.content.split('\n').filter(l => l.trim()).length);
 
-// API 配置
-const api = api.create({ baseURL: API_BASE_URL });
-api.interceptors.request.use(c => {
-  const token = localStorage.getItem(TOKEN_KEY);
-  if (token) c.headers.Authorization = `Bearer ${token}`;
-  return c;
-});
-api.interceptors.response.use(r => r.data, e => {
-  if (e.response && e.response.status === 401) logout();
-  return Promise.reject(e);
-});
-
 // 辅助函数
 let toastTimer;
 const showToast = (type, title, msg) => {
