@@ -1,21 +1,39 @@
 require('dotenv').config();
 
-const express = require('express');
+const express = require('express'); // 1. 引入 express
 const http = require('http');
 const { Server } = require("socket.io");
 const cors = require('cors');
-const { PrismaClient } = require('@prisma/client');
 
-const app = express();
-const prisma = new PrismaClient();
+// === 数据库连接部分 (Turso/SQLite) ===
+const { PrismaClient } = require('@prisma/client');
+const { createClient } = require('@libsql/client');
+const { PrismaLibSQL } = require('@prisma/adapter-libsql');
+
+// 初始化 Turso 客户端
+const turso = createClient({
+  url: process.env.TURSO_DATABASE_URL,
+  authToken: process.env.TURSO_AUTH_TOKEN,
+});
+
+// 兼容性处理：不同版本的适配器导出方式可能不同
+const AdapterClass = PrismaLibSQL.default || PrismaLibSQL;
+const adapter = new AdapterClass(turso);
+
+// 初始化 Prisma
+const prisma = new PrismaClient({ adapter });
+// ===================================
+
+const app = express(); // 2. 🟢 关键：这里初始化 app
 
 // 从环境变量读取配置
 const PORT = process.env.PORT || 3000;
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin666";
 
+// 中间件配置
 app.use(cors({
-  origin: CLIENT_URL, // ✅ 使用变量
+  origin: CLIENT_URL,
   methods: ["GET", "POST", "PUT", "DELETE"]
 }));
 
@@ -25,11 +43,11 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: CLIENT_URL, // ✅ 使用变量
+    origin: CLIENT_URL,
     methods: ["GET", "POST"]
   }
 });
-let rooms = {};
+
 
 // === 🛡️ 中间件: 适配 Bearer Token 验证 ===
 const adminAuth = (req, res, next) => {
@@ -590,13 +608,14 @@ io.on('connection', (socket) => {
   });
 });
 
-// 启动监听
+// 启动服务器
 server.listen(PORT, () => {
   console.log(`
   🚀 服务器运行中!
   --------------------------
   📡 接口地址: http://localhost:${PORT}
   🔗 允许跨域: ${CLIENT_URL}
+  💽 数据库: Turso Cloud
   --------------------------
   `);
 });
