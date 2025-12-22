@@ -336,7 +336,7 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import api from '@/api';
+import api from '../api';
 
 const router = useRouter();
 const TOKEN_KEY = 'admin_auth_token';
