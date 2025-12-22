@@ -1,0 +1,9 @@
+/* client/src/style.css */
+@import "tailwindcss";
+
+/* 你的自定义样式 */
+body {
+  /* v4 支持直接在这里写 apply，或者直接写原生 CSS */
+  background-color: #111827; /* gray-900 */
+  color: white;
+}

@@ -1,0 +1,44 @@
+// server/prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  password String
+  role     String @default("ADMIN")
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  description String?
+  isDeleted   Boolean   @default(false)
+  penalties   Penalty[]
+}
+
+model Penalty {
+  id           Int      @id @default(autoincrement())
+  content      String
+  type         String
+  level        Int      @default(1)
+  language     String   @default("zh-CN")
+  status       String   @default("PENDING")
+  rejectReason String?
+  likes        Int      @default(0)
+  dislikes     Int      @default(0)
+  category     Category @relation(fields: [categoryId], references: [id])
+  categoryId   Int
+  creator      String?
+  ipAddress    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  isDeleted    Boolean  @default(false)
+}
