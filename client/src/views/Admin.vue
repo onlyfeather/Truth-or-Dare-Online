@@ -336,10 +336,9 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import axios from 'axios';
+import api from '@/api';
 
 const router = useRouter();
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api'; 
 const TOKEN_KEY = 'admin_auth_token';
 
 // 基础状态
@@ -381,7 +380,7 @@ const displayStats = computed(() => ({
 const batchPreviewCount = computed(() => batchForm.value.content.split('\n').filter(l => l.trim()).length);
 
 // API 配置
-const api = axios.create({ baseURL: API_BASE_URL });
+const api = api.create({ baseURL: API_BASE_URL });
 api.interceptors.request.use(c => {
   const token = localStorage.getItem(TOKEN_KEY);
   if (token) c.headers.Authorization = `Bearer ${token}`;

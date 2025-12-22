@@ -1,14 +1,18 @@
 import axios from 'axios';
 
-// 基础 URL 加上 /api 后缀
-const baseURL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000') + '/api';
+// 🟢 智能处理：防止环境变量里多填了斜杠或 /api
+const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const cleanBaseUrl = rawBaseUrl.replace(/\/+$/, ''); // 去掉末尾所有的斜杠
+
+// 确保只加一个 /api
+const baseURL = cleanBaseUrl.endsWith('/api') ? cleanBaseUrl : `${cleanBaseUrl}/api`;
 
 const api = axios.create({
   baseURL,
   timeout: 10000,
 });
 
-// 请求拦截器：自动带上 Token
+// 请求拦截器
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('admin_auth_token');
   if (token) {
@@ -17,16 +21,14 @@ api.interceptors.request.use(config => {
   return config;
 });
 
-// 响应拦截器：简化数据返回，处理 401
+// 响应拦截器
 api.interceptors.response.use(
-  response => response.data, // 直接返回 data，不用每次都 .data
+  response => response.data,
   error => {
     if (error.response && error.response.status === 401) {
-      // Token 过期或无效
       localStorage.removeItem('admin_auth_token');
-      // 可以选择跳转到登录页，或者由组件处理
       if (window.location.pathname.includes('/admin')) {
-         window.location.reload(); 
+        window.location.reload(); 
       }
     }
     return Promise.reject(error);
