@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-const express = require('express'); // 1. 引入 express
+const express = require('express');
 const http = require('http');
 const { Server } = require("socket.io");
 const cors = require('cors');
@@ -24,7 +24,10 @@ const adapter = new AdapterClass(turso);
 const prisma = new PrismaClient({ adapter });
 // ===================================
 
-const app = express(); // 2. 🟢 关键：这里初始化 app
+const app = express();
+
+// 🔥 关键：定义全局内存房间对象，用于存储实时游戏状态
+const rooms = {}; 
 
 // 从环境变量读取配置
 const PORT = process.env.PORT || 3000;
@@ -61,8 +64,11 @@ const adminAuth = (req, res, next) => {
   res.status(401).json({ error: "无权访问" });
 };
 
-// === API 接口 ===
+// =======================
+//       API 接口区域
+// =======================
 
+// 1. 获取所有分类 (公开)
 app.get('/api/categories', async (req, res) => {
   try {
     const categories = await prisma.category.findMany();
@@ -70,51 +76,63 @@ app.get('/api/categories', async (req, res) => {
   } catch (e) { res.status(500).json({ error: "Error" }); }
 });
 
+// 2. 获取活跃房间列表 (公开 - 从内存读取)
 app.get('/api/rooms', (req, res) => {
-  const roomList = Object.values(rooms).filter(r => !r.isPrivate).map(r => ({
-    id: r.id, name: r.name, count: r.players.length, mode: r.mode
-  }));
+  // 只返回公开的房间
+  const roomList = Object.values(rooms)
+    .filter(r => r.mode === 'public')
+    .map(r => ({
+      id: r.id, 
+      name: r.name, 
+      count: r.players.length, 
+      mode: r.mode
+    }));
   res.json(roomList);
 });
 
+// 3. 用户提交题目 (公开)
 app.post('/api/penalties', async (req, res) => {
   const { content, type, level, categoryId, creator } = req.body;
   if (!content || !type || !categoryId) return res.status(400).json({ error: "Missing info" });
   try {
     const newPenalty = await prisma.penalty.create({
       data: {
-        content, type, level: parseInt(level), categoryId: parseInt(categoryId), creator: creator || '匿名', status: 'PENDING'
+        content, 
+        type, 
+        level: parseInt(level), 
+        categoryId: parseInt(categoryId), 
+        creator: creator || '匿名', 
+        status: 'PENDING' // 默认为待审核
       }
     });
     res.json({ success: true, data: newPenalty });
   } catch (e) { res.status(500).json({ error: "Error" }); }
 });
 
-// === 👮 管理员接口 (适配新前端) ===
+// === 👮 管理员接口 ===
 
-// 1. 登录接口
+// 4. 管理员登录
 app.post('/api/admin/login', (req, res) => {
   const { password } = req.body;
   if (password === ADMIN_PASSWORD) {
-    // 简单起见，直接把密码当 Token 返回
     res.json({ success: true, token: ADMIN_PASSWORD });
   } else {
     res.status(401).json({ error: "密码错误" });
   }
 });
 
-// 2. 统计数据
+// 5. 获取统计数据
 app.get('/api/admin/stats', adminAuth, async (req, res) => {
   try {
     const total = await prisma.penalty.count();
     const pending = await prisma.penalty.count({ where: { status: 'PENDING' } });
     const approved = await prisma.penalty.count({ where: { status: 'APPROVED' } });
-    const roomCount = Object.keys(rooms).length;
+    const roomCount = Object.keys(rooms).length; // 内存中的活跃房间数
     res.json({ total, pending, approved, rooms: roomCount });
   } catch (e) { res.status(500).json({ error: "Error" }); }
 });
 
-// 3. 活跃房间
+// 6. 获取活跃房间详情 (管理员可见所有，包括私密)
 app.get('/api/admin/active-rooms', adminAuth, (req, res) =>{
   const data = Object.values(rooms).map(r => ({
     id: r.id, 
@@ -124,12 +142,12 @@ app.get('/api/admin/active-rooms', adminAuth, (req, res) =>{
     hostName: r.players.find(p => p.isHost)?.nickname || '未知',
     playerCount: r.players.length, 
     poolSize: r.activePenaltyIds.length,
-    createdAt: r.createdAt || Date.now() // 👈 新增：返回创建时间
+    createdAt: r.createdAt || Date.now()
   }));
   res.json({ data });
 });
 
-// === 修改：获取题目列表 (支持回收站模式) ===
+// 7. 获取题目列表 (支持分页、筛选状态、回收站)
 app.get('/api/admin/penalties', adminAuth, async (req, res) => {
   const { page = 1, limit = 20, status, deleted } = req.query;
   const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -158,28 +176,28 @@ app.get('/api/admin/penalties', adminAuth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: "Error" }); }
 });
 
-// === 新增：恢复题目 (后悔药) ===
+// 8. 恢复题目 (从回收站捞回)
 app.put('/api/admin/penalties/:id/restore', adminAuth, async (req, res) => {
   const { id } = req.params;
   try {
     await prisma.penalty.update({
       where: { id: parseInt(id) },
-      data: { isDeleted: false } // 👈 复活！
+      data: { isDeleted: false }
     });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: "Error" }); }
 });
 
-// === 新增：硬删除 (彻底粉碎) ===
+// 9. 硬删除 (彻底从数据库移除)
 app.delete('/api/admin/penalties/:id/hard', adminAuth, async (req, res) => {
   const { id } = req.params;
   try {
-    await prisma.penalty.delete({ where: { id: parseInt(id) } }); // 👈 真的删了
+    await prisma.penalty.delete({ where: { id: parseInt(id) } });
     res.json({ success: true });
   } catch (e) { res.status(500).json({ error: "Error" }); }
 });
 
-// 5. 更新状态
+// 10. 更新题目审核状态 (APPROVED / REJECTED)
 app.put('/api/admin/penalties/:id', adminAuth, async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
@@ -192,14 +210,13 @@ app.put('/api/admin/penalties/:id', adminAuth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: "Error" }); }
 });
 
-// 6. 删除题目 (软删除)
+// 11. 软删除题目 (移入回收站)
 app.delete('/api/admin/penalties/:id', adminAuth, async (req, res) => {
   const { id } = req.params;
   try {
-    // 之前是 .delete，现在改为 .update
     await prisma.penalty.update({
       where: { id: parseInt(id) },
-      data: { isDeleted: true } // 👈 只是打个标记，不真删
+      data: { isDeleted: true }
     });
     console.log(`🗑️ 软删除了题目 ID: ${id}`);
     res.json({ success: true });
@@ -209,7 +226,7 @@ app.delete('/api/admin/penalties/:id', adminAuth, async (req, res) => {
   }
 });
 
-// === 🆕 新增：创建新分类 ===
+// 12. 创建新分类
 app.post('/api/admin/categories', adminAuth, async (req, res) => {
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: "分类名称不能为空" });
@@ -224,10 +241,10 @@ app.post('/api/admin/categories', adminAuth, async (req, res) => {
   }
 });
 
-// === 🆕 新增：批量导入题目 ===
+// 13. 批量导入题目
 app.post('/api/admin/penalties/batch', adminAuth, async (req, res) => {
   const { items, categoryId, type, level } = req.body;
-  // items 是一个字符串数组，包含多个题目内容
+  // items 是一个字符串数组
   
   if (!items || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: "没有有效的数据" });
@@ -241,14 +258,14 @@ app.post('/api/admin/penalties/batch', adminAuth, async (req, res) => {
       level: parseInt(level),
       categoryId: parseInt(categoryId),
       creator: '管理员', // 批量导入默认作者
-      status: 'APPROVED', // 🆕 管理员导入的默认直接通过
+      status: 'APPROVED', // 管理员导入的默认直接通过
       isDeleted: false
     }));
 
     // Prisma 批量插入
     const result = await prisma.penalty.createMany({
       data,
-      skipDuplicates: true // 跳过完全重复的
+      skipDuplicates: true
     });
 
     res.json({ success: true, count: result.count });
@@ -258,17 +275,16 @@ app.post('/api/admin/penalties/batch', adminAuth, async (req, res) => {
   }
 });
 
-// === 🆕 [Admin] 获取分类列表（带题目数量统计） ===
+// 14. 获取分类列表（带题目计数）
 app.get('/api/admin/categories-stats', adminAuth, async (req, res) => {
   try {
     const categories = await prisma.category.findMany({
       include: {
         _count: {
-          select: { penalties: true } // 统计关联的题目数量
+          select: { penalties: true }
         }
       }
     });
-    // 格式化返回：{ id, name, count }
     const data = categories.map(c => ({
       id: c.id,
       name: c.name,
@@ -281,11 +297,10 @@ app.get('/api/admin/categories-stats', adminAuth, async (req, res) => {
   }
 });
 
-// === 🆕 [Admin] 删除分类 ===
+// 15. 删除分类
 app.delete('/api/admin/categories/:id', adminAuth, async (req, res) => {
   const { id } = req.params;
   try {
-    // 1. 检查该分类下是否有题目
     const count = await prisma.penalty.count({
       where: { categoryId: parseInt(id) }
     });
@@ -294,7 +309,6 @@ app.delete('/api/admin/categories/:id', adminAuth, async (req, res) => {
       return res.status(400).json({ error: `无法删除：该分类下还有 ${count} 道题目。请先清空或转移题目。` });
     }
 
-    // 2. 安全删除
     await prisma.category.delete({
       where: { id: parseInt(id) }
     });
@@ -306,7 +320,7 @@ app.delete('/api/admin/categories/:id', adminAuth, async (req, res) => {
   }
 });
 
-// === 🆕 [Admin] 更新分类名称 ===
+// 16. 更新分类名称
 app.put('/api/admin/categories/:id', adminAuth, async (req, res) => {
   const { id } = req.params;
   const { name } = req.body;
@@ -320,12 +334,11 @@ app.put('/api/admin/categories/:id', adminAuth, async (req, res) => {
     res.json({ success: true });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ error: "更新失败，可能是名称重复" });
+    res.status(500).json({ error: "更新失败" });
   }
 });
 
-// === 🔄 [Admin] 更新题目完整信息 (内容/等级/分类/类型) ===
-// 替换掉之前的 .../content 接口
+// 17. 更新题目完整信息
 app.put('/api/admin/penalties/:id/info', adminAuth, async (req, res) => {
   const { id } = req.params;
   const { content, type, level, categoryId } = req.body;
@@ -349,7 +362,10 @@ app.put('/api/admin/penalties/:id/info', adminAuth, async (req, res) => {
   }
 });
 
-// === Socket.io 逻辑区域 ===
+
+// =======================
+//     Socket.io 逻辑
+// =======================
 
 io.on('connection', (socket) => {
   console.log('用户连接:', socket.id);
@@ -359,40 +375,30 @@ io.on('connection', (socket) => {
     const roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
     
     console.log(`🏠 [创建房间] ID:${roomId} 房主:${nickname}`);
-    console.log(`📥 收到分类IDs:`, categoryIds);
 
-    // === 关键修复开始 ===
+    // --- 题库加载逻辑 ---
     let initialPool = [];
-    
-    // 1. 确保 categoryIds 是一个数组，并过滤掉无效值
     const rawIds = Array.isArray(categoryIds) ? categoryIds : [];
-    
-    // 2. 强制转为整数 (Prisma 对类型非常敏感)
-    const safeCategoryIds = rawIds
-      .map(id => parseInt(id))
-      .filter(id => !isNaN(id));
+    const safeCategoryIds = rawIds.map(id => parseInt(id)).filter(id => !isNaN(id));
 
     if (safeCategoryIds.length > 0) {
       try {
-        // 3. 数据库查询：只查【已通过】且【属于选中分类】的题目
+        // 从数据库加载题目 (Approved + Not Deleted)
         initialPool = await prisma.penalty.findMany({
           where: { 
             categoryId: { in: safeCategoryIds }, 
-            status: 'APPROVED', // <--- 必须加这个！否则会抽到没审核的脏话
-            isDeleted: false // 如果你做了软删除，记得加上这个
+            status: 'APPROVED', 
+            isDeleted: false 
           },
           include: { category: true } 
         });
-        
         console.log(`✅ 成功加载题库: 找到 ${initialPool.length} 道题目`);
       } catch (e) {
         console.error("❌ 读取题库失败:", e);
       }
-    } else {
-      console.log("⚠️ 未选择任何分类，或者是分类ID格式错误");
     }
-    // === 关键修复结束 ===
 
+    // 初始化内存房间状态
     rooms[roomId] = {
       id: roomId,
       name: roomName || `${nickname}的房间`,
@@ -401,7 +407,7 @@ io.on('connection', (socket) => {
       password,
       players: [],
       history: [],
-      // 题目池
+      // 题目池 (内存中)
       fullPool: initialPool, 
       activePenaltyIds: initialPool.map(p => p.id),
       // 游戏状态
@@ -414,7 +420,7 @@ io.on('connection', (socket) => {
     const hostPlayer = { id: socket.id, nickname, isHost: true, avatar: '👑' };
     rooms[roomId].players.push(hostPlayer);
 
-    // 发送房间信息回给房主
+    // 发送初始化数据给房主
     socket.emit('room_joined', { 
       roomId, 
       roomName: rooms[roomId].name,
@@ -427,50 +433,45 @@ io.on('connection', (socket) => {
     });
   });
 
-  // 2. 加入房间 (支持普通玩家 & 上帝视角)
+  // 2. 加入房间
   socket.on('join_room', ({ roomId, nickname, password, isGhost, adminToken }) => {
     const room = rooms[roomId];
 
     if (!room) {
-      return socket.emit('error_msg', '房间不存在');
+      return socket.emit('error_msg', '房间不存在或已关闭');
     }
 
-    // === 👻 上帝视角 (核心逻辑) ===
+    // --- 上帝视角逻辑 ---
     if (isGhost) {
-      // 验证管理员权限 (防止普通用户猜参数混入)
       if (adminToken !== ADMIN_PASSWORD) {
          return socket.emit('error_msg', '无权访问：管理员密钥错误');
       }
-
       console.log(`🕵️ 管理员隐身进入房间: ${roomId}`);
       
-      // 1. 只加入 Socket 频道 (为了接收 update_pool, show_result 等广播)
-      socket.join(roomId);
+      socket.join(roomId); // 只加入频道，不进入 players 列表
 
-      // 2. 发送房间全量数据给管理员
-      // 注意：这里没有把管理员加到 room.players 里，也没有广播 player_joined
       socket.emit('room_joined', { 
         roomId, 
         roomName: room.name, 
-        isHost: false, // 永远不是房主
+        isHost: false, 
         players: room.players, 
         history: room.history, 
         poolCount: room.activePenaltyIds.length, 
         currentTurnPlayerId: room.currentTurnPlayerId,
-        isSpectator: true // 告诉前端：你是观众
+        isSpectator: true
       });
-      
-      return; // ⛔️ 结束执行，不走下面的普通玩家逻辑
+      return;
     }
-    // =============================
+    // -------------------
 
-    // --- 下面是普通玩家逻辑 (保持不变) ---
+    // 普通玩家验证
     if (room.mode === 'private' && room.password !== password) {
       return socket.emit('error_msg', '密码错误');
     }
 
     socket.join(roomId);
 
+    // 检查是否重连或新玩家
     let player = room.players.find(p => p.id === socket.id);
     if (!player) {
       player = { 
@@ -493,9 +494,8 @@ io.on('connection', (socket) => {
       currentTurnPlayerId: room.currentTurnPlayerId
     });
   });
-  
 
-  // 3. 聊天消息
+  // 3. 聊天
   socket.on('send_msg', ({ roomId, msg, nickname }) => {
     const room = rooms[roomId];
     if (room) {
@@ -506,6 +506,8 @@ io.on('connection', (socket) => {
         time: new Date().toLocaleTimeString() 
       };
       room.history.push(newMsg);
+      // 保持历史记录不超过 50 条防止内存溢出
+      if (room.history.length > 50) room.history.shift();
       io.to(roomId).emit('receive_msg', newMsg);
     }
   });
@@ -547,7 +549,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // 7. 题库管理 (获取详情)
+  // 7. 管理题库：获取详情
   socket.on('get_pool_details', ({ roomId }) => {
     const room = rooms[roomId];
     if (!room) return;
@@ -557,7 +559,7 @@ io.on('connection', (socket) => {
     });
   });
 
-  // 8. 题库管理 (更新)
+  // 8. 管理题库：更新选中状态
   socket.on('update_pool', ({ roomId, activeIds }) => {
     const room = rooms[roomId];
     if (!room) return;
@@ -565,7 +567,7 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('pool_updated', { count: activeIds.length });
   });
 
-  // 9. 离开房间 (通用处理)
+  // 9. 离开房间 / 断开连接
   const handleLeave = () => {
     for (const roomId in rooms) {
       const room = rooms[roomId];
@@ -578,20 +580,20 @@ io.on('connection', (socket) => {
         // 广播离开
         socket.to(roomId).emit('player_left', { id: socket.id });
 
-        // 如果是当前目标逃跑，重置回合
+        // 如果被选中的人跑了，重置游戏状态
         if (room.currentTurnPlayerId === socket.id) {
            room.currentTurnPlayerId = null;
            io.to(roomId).emit('turn_reset');
-           const sysMsg = { id: Date.now(), nickname: '系统', text: '目标逃跑，回合重置！', time: new Date().toLocaleTimeString() };
-           room.history.push(sysMsg);
+           const sysMsg = { id: Date.now(), nickname: '系统', text: '当前目标逃跑了，回合重置！', time: new Date().toLocaleTimeString() };
            io.to(roomId).emit('receive_msg', sysMsg);
         }
 
-        // 如果房间空了 -> 删除
+        // 如果房间空了 -> 删除内存
         if (room.players.length === 0) {
           delete rooms[roomId];
+          console.log(`🗑️ 房间 ${roomId} 已销毁`);
         } 
-        // 如果房主走了 -> 移交房主
+        // 如果房主跑了 -> 移交房主权限
         else if (leaver.isHost) {
           room.players[0].isHost = true;
           io.to(roomId).emit('host_change', { newHostId: room.players[0].id });
@@ -615,7 +617,7 @@ server.listen(PORT, () => {
   --------------------------
   📡 接口地址: http://localhost:${PORT}
   🔗 允许跨域: ${CLIENT_URL}
-  💽 数据库: Turso Cloud
+  💽 数据库: Turso Cloud (Prisma Adapter)
   --------------------------
   `);
 });
