@@ -45,26 +45,6 @@
     <div v-if="isLoading" class="fixed inset-0 bg-[#0a0c10]/70 backdrop-blur-[2px] z-[5000] flex items-center justify-center cursor-wait"><div class="w-12 h-12 border-4 border-pink-500 border-t-transparent rounded-full animate-spin"></div></div>
 
     <transition name="fade">
-      <div v-if="showCategoryModal" class="fixed inset-0 z-[9000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-gray-800 w-full max-w-sm rounded-2xl border border-gray-700 p-6 animate-scale-in">
-          <h3 class="text-lg font-bold text-white mb-4">🏷️ {{ isEditingCategory ? '修改分类名称' : '新增分类' }}</h3>
-          <input 
-            v-model="categoryForm.name" 
-            placeholder="例如：情侣专属" 
-            class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white mb-6 focus:border-purple-500 outline-none" 
-            @keyup.enter="submitCategory"
-          >
-          <div class="flex gap-3">
-            <button @click="showCategoryModal = false" class="flex-1 py-2 bg-gray-700 rounded-lg text-sm font-bold text-gray-300">取消</button>
-            <button @click="submitCategory" class="flex-1 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg text-sm font-bold text-white">
-              {{ isEditingCategory ? '保存修改' : '立即创建' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </transition>
-
-    <transition name="fade">
       <div v-if="showEditPenaltyModal" class="fixed inset-0 z-[9000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-gray-800 w-full max-w-lg rounded-2xl border border-gray-700 p-6 animate-scale-in flex flex-col shadow-2xl">
           <h3 class="text-lg font-bold text-white mb-5 flex items-center gap-2">
