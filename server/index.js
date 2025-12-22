@@ -244,34 +244,34 @@ app.post('/api/admin/categories', adminAuth, async (req, res) => {
 // 13. 批量导入题目
 app.post('/api/admin/penalties/batch', adminAuth, async (req, res) => {
   const { items, categoryId, type, level } = req.body;
-  // items 是一个字符串数组
   
   if (!items || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: "没有有效的数据" });
   }
 
   try {
-    // 构造数据数组
-    const data = items.map(content => ({
-      content: content.trim(),
-      type,
-      level: parseInt(level),
-      categoryId: parseInt(categoryId),
-      creator: '管理员', // 批量导入默认作者
-      status: 'APPROVED', // 管理员导入的默认直接通过
-      isDeleted: false
-    }));
-
-    // Prisma 批量插入
-    const result = await prisma.penalty.createMany({
-      data,
-      skipDuplicates: true
+    // 🟢 修复方法：将 createMany 改为并发执行多个 create
+    const createPromises = items.map(content => {
+      return prisma.penalty.create({
+        data: {
+          content: content.trim(),
+          type: type || 'truth',
+          level: parseInt(level) || 3,
+          categoryId: parseInt(categoryId),
+          creator: '管理员',
+          status: 'APPROVED',
+          isDeleted: false
+        }
+      });
     });
 
-    res.json({ success: true, count: result.count });
+    // 等待所有插入操作完成
+    const results = await Promise.all(createPromises);
+
+    res.json({ success: true, count: results.length });
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "批量导入失败" });
+    console.error('❌ 批量导入详细报错:', e);
+    res.status(500).json({ error: "导入失败，请检查数据库连接或分类 ID" });
   }
 });
 
