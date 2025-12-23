@@ -173,6 +173,9 @@
 
     </div>
   </div>
+  <div v-if="isLoading" class="fixed inset-0 bg-black/60 backdrop-blur-[2px] z-[5000] flex items-center justify-center cursor-wait">
+    <div class="w-12 h-12 border-4 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
+  </div>
 </template>
 
 <script setup>
@@ -202,6 +205,7 @@ const joinRoomId = ref('');
 const joinPassword = ref('');
 const joinMode = ref('public');
 const passwordInputRef = ref(null);
+const isLoading = ref(false);
 
 // 辅助函数：显示提示
 const showToast = (msg) => {
