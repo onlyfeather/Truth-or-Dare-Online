@@ -66,6 +66,13 @@ app.get('/api/categories', async (req, res) => {
   } catch (e) { res.status(500).json({ error: "Error" }); }
 });
 
+// 增加查询单个房间信息的接口
+app.get('/api/rooms/:id', (req, res) => {
+  const room = rooms[req.params.id.toUpperCase()];
+  if (!room) return res.status(404).json({ error: "房间不存在" });
+  res.json({ id: room.id, mode: room.mode });
+});
+
 app.get('/api/rooms', (req, res) => {
   const roomList = Object.values(rooms)
     .filter(r => 

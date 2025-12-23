@@ -282,39 +282,43 @@ const handleCreateRoom = () => {
   });
 };
 
-// --- 修改 handleJoinRoom 逻辑 ---
+// --- 彻底修复后的 handleJoinRoom ---
 const handleJoinRoom = async () => {
   if (!nickname.value) return showToast("请先输入昵称！");
-  if (!joinRoomId.value) return showToast("请选择或输入房间号！");
+  if (!joinRoomId.value) return showToast("请输入房号！");
 
-  // 🟢 核心修复：检查当前输入的房号是否在列表中且是否为加密房
-  const targetRoom = roomList.value.find(r => r.id === joinRoomId.value.toUpperCase());
-  
-  // 更新当前的加入模式（用于控制密码框显示）
-  if (targetRoom) {
-    joinMode.value = targetRoom.mode;
-  }
+  const upperID = joinRoomId.value.toUpperCase();
+  isLoading.value = true; // 如果有加载状态可以加上
 
-  // 如果是加密房且没输密码，进行拦截
-  if (joinMode.value === 'private' && !joinPassword.value) {
-    showToast("🔒 此房间需要密码，请输入！");
-    // 自动切换到 join tab 并聚焦
-    activeTab.value = 'join';
-    await nextTick();
-    if (passwordInputRef.value) {
-      passwordInputRef.value.focus();
+  try {
+    // 🟢 1. 实时从服务器获取该房间的最新模式
+    const roomInfo = await api.get(`/rooms/${upperID}`);
+    joinMode.value = roomInfo.mode;
+
+    // 🟢 2. 只有确认了模式后，才进行密码拦截
+    if (roomInfo.mode === 'private' && !joinPassword.value) {
+      showToast("🔒 此房间需要密码，请输入！");
+      activeTab.value = 'join';
+      await nextTick();
+      if (passwordInputRef.value) passwordInputRef.value.focus();
+      return; // 拦截发送
     }
-    return; // 拦截发送
-  }
 
-  saveNickname();
-  if (!socket.connected) socket.connect();
-  
-  socket.emit('join_room', {
-    roomId: joinRoomId.value.toUpperCase(), // 统一转大写防止输入错误
-    nickname: nickname.value,
-    password: joinPassword.value
-  });
+    // 🟢 3. 校验通过，执行加入
+    saveNickname();
+    if (!socket.connected) socket.connect();
+    
+    socket.emit('join_room', {
+      roomId: upperID,
+      nickname: nickname.value,
+      password: joinPassword.value
+    });
+  } catch (e) {
+    // 如果返回 404，说明房间不存在
+    showToast(e.response?.data?.error || "查询房间失败");
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 // --- 优化 selectRoom 函数 ---
