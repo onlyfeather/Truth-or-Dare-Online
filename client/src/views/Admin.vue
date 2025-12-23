@@ -131,18 +131,19 @@
                    <button @click="openBatchModal" class="px-3 py-1.5 bg-blue-900/30 hover:bg-blue-900/50 text-blue-300 border border-blue-700/50 rounded-lg text-xs font-bold transition flex items-center gap-1"><span>📥</span> 导入</button>
                  </div>
                  <div class="w-px h-6 bg-gray-800 mx-1"></div>
-                 <button @click="toggleRecycleBin" :class="['px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 border', isRecycleBin ? 'bg-red-500/20 text-red-400 border-red-500/50' : 'bg-gray-800 text-gray-400 border-gray-700 hover:text-white']">
+                 <button @click="isRecycleBin = !isRecycleBin" :class="['px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 border', isRecycleBin ? 'bg-red-500/20 text-red-400 border-red-500/50' : 'bg-gray-800 text-gray-400 border-gray-700 hover:text-white']">
                    <span v-if="isRecycleBin">↩️ 返回题库</span><span v-else>🗑️ 回收站</span>
                  </button>
               </div>
               <div class="flex gap-2 w-full xl:w-auto">
-                 <select v-if="!isRecycleBin" v-model="filterStatus" @change="resetAndFetchPenalties" class="flex-1 xl:flex-none bg-gray-900 border border-gray-700 text-gray-300 text-sm rounded-lg px-3 py-2 outline-none focus:border-purple-500 transition">
+                 <select v-if="!isRecycleBin" v-model="filterStatus" class="flex-1 xl:flex-none bg-gray-900 border border-gray-700 text-gray-300 text-sm rounded-lg px-3 py-2 outline-none focus:border-purple-500 transition">
                    <option value="">全部状态</option><option value="PENDING">🟠 待审核</option><option value="APPROVED">🟢 已通过</option><option value="REJECTED">🔴 已拒绝</option>
                  </select>
-                 <button @click="resetAndFetchPenalties" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition border border-gray-700 active:scale-95">🔄</button>
+                 <button @click="fetchPenalties" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition border border-gray-700 active:scale-95">🔄</button>
               </div>
             </div>
           </div>
+
           <div class="px-4 md:px-8 py-6 w-full max-w-7xl mx-auto flex-1">
             <div :class="['bg-gray-900/60 border rounded-2xl overflow-hidden shadow-xl transition-colors relative z-0', isRecycleBin ? 'border-red-900/30' : 'border-gray-700/50']">
               <div class="overflow-x-auto">
@@ -168,9 +169,9 @@
                       <td class="px-4 py-4 align-top">
                         <span v-if="isRecycleBin" class="text-red-500 text-xs font-bold bg-red-900/20 px-2 py-1 rounded-full">🗑️ 已删除</span>
                         <template v-else>
-                           <span v-if="p.status === 'PENDING'" class="text-yellow-500 text-xs font-bold bg-yellow-900/10 px-2 py-1 rounded-full">🟠 待审</span>
-                           <span v-else-if="p.status === 'APPROVED'" class="text-green-500 text-xs font-bold bg-green-900/10 px-2 py-1 rounded-full">🟢 通过</span>
-                           <span v-else class="text-red-500 text-xs font-bold bg-red-900/10 px-2 py-1 rounded-full">🔴 拒绝</span>
+                           <span v-if="p.status === 'PENDING'" class="text-yellow-500 text-xs font-bold bg-yellow-900/10 px-2 py-1 rounded-full">待审</span>
+                           <span v-else-if="p.status === 'APPROVED'" class="text-green-500 text-xs font-bold bg-green-900/10 px-2 py-1 rounded-full">通过</span>
+                           <span v-else class="text-red-500 text-xs font-bold bg-red-900/10 px-2 py-1 rounded-full">拒绝</span>
                         </template>
                       </td>
                       <td class="px-4 py-4 text-right align-top">
@@ -181,7 +182,6 @@
                           </template>
                           <template v-else>
                              <button @click="openEditPenalty(p)" class="w-8 h-8 bg-blue-600/20 border border-blue-600/50 hover:bg-blue-600 text-blue-500 hover:text-white rounded-lg flex items-center justify-center transition" title="编辑详情">✏️</button>
-                             
                              <button v-if="p.status !== 'APPROVED'" @click="updateStatus(p.id, 'APPROVED')" class="w-8 h-8 bg-green-600/20 border border-green-600/50 hover:bg-green-600 text-green-500 hover:text-white rounded-lg flex items-center justify-center transition" title="通过">✓</button>
                              <button v-if="p.status !== 'REJECTED'" @click="updateStatus(p.id, 'REJECTED')" class="w-8 h-8 bg-yellow-600/20 border border-yellow-600/50 hover:bg-yellow-600 text-yellow-500 hover:text-white rounded-lg flex items-center justify-center transition" title="拒绝">✕</button>
                              <button @click="confirmAction('softDelete', p.id)" class="w-8 h-8 bg-gray-800 border border-gray-700 hover:bg-red-600 hover:border-red-600 text-gray-400 hover:text-white rounded-lg flex items-center justify-center transition" title="删除">🗑️</button>
@@ -194,25 +194,9 @@
               </div>
               
               <div class="p-4 border-t border-gray-800 flex justify-between items-center bg-gray-900/30">
-                 <button 
-                   @click="changePage(-1)" 
-                   :disabled="page <= 1" 
-                   class="text-xs px-3 py-1.5 bg-gray-800 rounded hover:bg-gray-700 disabled:opacity-30 border border-gray-700 transition"
-                 >
-                   上一页
-                 </button>
-                 
-                 <span class="text-xs font-mono text-gray-500">
-                   PAGE {{ page }} / {{ totalPages }} <span class="opacity-50">({{ totalCount }} items)</span>
-                 </span>
-                 
-                 <button 
-                   @click="changePage(1)" 
-                   :disabled="page >= totalPages" 
-                   class="text-xs px-3 py-1.5 bg-gray-800 rounded hover:bg-gray-700 disabled:opacity-30 border border-gray-700 transition"
-                 >
-                   下一页
-                 </button>
+                 <button @click="changePage(-1)" :disabled="page <= 1" class="text-xs px-3 py-1.5 bg-gray-800 rounded hover:bg-gray-700 disabled:opacity-30 border border-gray-700 transition">上一页</button>
+                 <span class="text-xs font-mono text-gray-500">PAGE {{ page }} / {{ totalPages }} <span class="opacity-50">({{ totalCount }} items)</span></span>
+                 <button @click="changePage(1)" :disabled="page >= totalPages" class="text-xs px-3 py-1.5 bg-gray-800 rounded hover:bg-gray-700 disabled:opacity-30 border border-gray-700 transition">下一页</button>
               </div>
             </div>
           </div>
@@ -344,7 +328,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+// 🟢 确保引入 watch
+import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../api';
 
@@ -377,8 +362,7 @@ const filterStatus = ref('');
 const isRecycleBin = ref(false); 
 const page = ref(1);
 const pageSize = 20;
-// 🟢 新增：翻页控制状态
-const totalCount = ref(0);
+const totalCount = ref(0); // 🟢 翻页总数
 
 // 表单状态
 const showCategoryModal = ref(false);
@@ -398,7 +382,7 @@ const displayStats = computed(() => ({
 }));
 const batchPreviewCount = computed(() => batchForm.value.content.split('\n').filter(l => l.trim()).length);
 
-// 🟢 新增：计算总页数
+// 🟢 修复：计算总页数
 const totalPages = computed(() => {
   return Math.ceil(totalCount.value / pageSize) || 1;
 });
@@ -440,15 +424,7 @@ const confirmAction = (actionType, id) => {
   else if (actionType === 'restore') config = { title: '确认恢复？', content: '题目将重新回到审核列表。', icon: '♻️', isDestructive: false, action: () => restorePenalty(id) };
   else if (actionType === 'hardDelete') config = { title: '彻底粉碎？', content: '警告：数据将从数据库永久消失，无法撤回！', icon: '💥', isDestructive: true, action: () => hardDeletePenalty(id) };
   else if (actionType === 'deleteCategory') config = { title: '删除分类？', content: '仅当该分类下没有任何题目时方可删除。', icon: '🏷️', isDestructive: true, action: () => deleteCategory(id) };
-  
-  // 🟢 接入解散房间
-  else if (actionType === 'dismissRoom') config = { 
-    title: '注销房间？', 
-    content: `确定要强制解散房间 ${id} 吗？房间内所有玩家将被即刻踢出。`, 
-    icon: '🚨', 
-    isDestructive: true, 
-    action: () => executeDismissRoom(id) 
-  };
+  else if (actionType === 'dismissRoom') config = { title: '注销房间？', content: `确定要强制解散房间 ${id} 吗？房间内所有玩家将被即刻踢出。`, icon: '🚨', isDestructive: true, action: () => executeDismissRoom(id) };
 
   modal.value = { show: true, ...config, confirmAction: config.action };
 };
@@ -486,13 +462,18 @@ const fetchPenalties = async () => {
     };
     const res = await api.get('/admin/penalties', { params });
     penalties.value = res.list || [];
-    // 🟢 修复：同步总条数，用于翻页计算
+    // 🟢 修复：同步总条数
     totalCount.value = res.total || 0;
   } catch (e) {} finally { isLoading.value = false; }
 };
 
-// 4. 执行具体操作 (API 调用)
-// 🟢 修复：增加注销房间的具体执行逻辑
+// 🟢 修复：watch 监听筛选条件变化，自动触发刷新
+watch([isRecycleBin, filterStatus], () => {
+  page.value = 1; // 重置页码
+  fetchPenalties();
+});
+
+// 4. 执行具体操作
 const executeDismissRoom = async (roomId) => {
   isLoading.value = true;
   try {
@@ -545,11 +526,7 @@ const openCreateCategory = () => {
 
 const openEditCategory = (cat) => {
   isEditingCategory.value = true;
-  categoryForm.value = { 
-    id: cat.id, 
-    name: cat.name, 
-    description: cat.description || '' 
-  };
+  categoryForm.value = { id: cat.id, name: cat.name, description: cat.description || '' };
   showCategoryModal.value = true;
 };
 
@@ -576,13 +553,7 @@ const submitBatch = async () => {
 };
 
 const openEditPenalty = (p) => {
-  editPenaltyForm.value = { 
-    id: p.id, 
-    content: p.content,
-    type: p.type,
-    level: p.level,
-    categoryId: p.categoryId
-  };
+  editPenaltyForm.value = { id: p.id, content: p.content, type: p.type, level: p.level, categoryId: p.categoryId };
   if (categories.value.length === 0) fetchCategoriesStats();
   showEditPenaltyModal.value = true;
 };
@@ -600,7 +571,6 @@ const submitEditPenalty = async () => {
     showToast('success', '更新成功', '题目信息已修改');
     showEditPenaltyModal.value = false;
     
-    // 乐观更新
     const item = penalties.value.find(p => p.id === editPenaltyForm.value.id);
     if (item) {
       item.content = editPenaltyForm.value.content;
@@ -675,7 +645,13 @@ const updateStatus = async (id, status) => {
   } catch (e) {}
 };
 
-const changePage = (d) => { page.value += d; fetchPenalties(); };
+const changePage = (d) => { 
+  const newPage = page.value + d;
+  if (newPage > 0 && newPage <= totalPages.value) {
+    page.value = newPage; 
+    fetchPenalties(); 
+  }
+};
 
 // 初始化执行
 onMounted(() => {
@@ -687,7 +663,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* 动画与滚动条样式保持不变 */
 .toast-enter-active, .toast-leave-active { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 .toast-enter-from, .toast-leave-to { opacity: 0; transform: translateY(-30px) scale(0.9); }
 .fade-enter-active, .fade-leave-active { transition: opacity 0.5s ease; }
