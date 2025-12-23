@@ -8,8 +8,8 @@
 
     <transition name="toast">
       <div v-if="toast.show" :class="['fixed top-6 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-6 z-[9999] px-6 py-4 rounded-xl shadow-2xl border backdrop-blur-md flex items-center gap-3 w-[90%] md:w-auto max-w-sm cursor-pointer', toast.type === 'success' ? 'bg-green-900/90 border-green-500/50 text-green-100' : 'bg-red-900/90 border-red-500/50 text-red-100']" @click="toast.show = false">
-        <span class="text-xl">{{ toast.type === 'success' ? '✅' : '🚫' }}</span>
-        <div><h4 class="font-bold text-sm">{{ toast.title }}</h4><p class="text-xs opacity-90">{{ toast.msg }}</p></div>
+        <span class="text-2xl">{{ toast.type === 'success' ? '✅' : '🚫' }}</span>
+        <div><h4 class="font-bold text-base">{{ toast.title }}</h4><p class="text-sm opacity-90">{{ toast.msg }}</p></div>
       </div>
     </transition>
 
@@ -17,73 +17,75 @@
       <div class="w-12 h-12 border-4 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
     </div>
 
-    <aside v-if="isAuthenticated" class="hidden md:flex flex-col w-64 h-full bg-gray-900/80 border-r border-gray-800 backdrop-blur-xl z-20 flex-shrink-0">
-      <div class="p-6 border-b border-gray-800/50">
-        <h2 class="text-2xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-violet-500">ADMIN</h2>
-        <div class="text-[10px] text-gray-500 mt-1 uppercase tracking-widest font-mono">管理控制台 v3.5</div>
+    <aside v-if="isAuthenticated" class="hidden md:flex flex-col w-72 h-full bg-gray-900/80 border-r border-gray-800 backdrop-blur-xl z-20 flex-shrink-0">
+      <div class="p-8 border-b border-gray-800/50">
+        <h2 class="text-3xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-violet-500 tracking-tighter">ADMIN</h2>
+        <div class="text-xs text-gray-400 mt-2 font-mono font-bold tracking-widest">控制台 v3.5</div>
       </div>
-      <nav class="flex-1 px-4 space-y-2 py-6">
-        <button @click="switchTab('dashboard')" :class="navBtnClass('dashboard')"><span>📊</span> 仪表盘</button>
-        <button @click="switchTab('penalties')" :class="navBtnClass('penalties')"><span>📝</span> 题库管理</button>
-        <button @click="switchTab('categories')" :class="navBtnClass('categories')"><span>🏷️</span> 分类管理</button>
+      <nav class="flex-1 px-5 space-y-3 py-8">
+        <button @click="switchTab('dashboard')" :class="navBtnClass('dashboard')"><span class="text-xl">📊</span> 仪表盘</button>
+        <button @click="switchTab('penalties')" :class="navBtnClass('penalties')"><span class="text-xl">📝</span> 题库管理</button>
+        <button @click="switchTab('categories')" :class="navBtnClass('categories')"><span class="text-xl">🏷️</span> 分类管理</button>
       </nav>
-      <div class="p-4 border-t border-gray-800/50">
-        <button @click="logout" class="w-full py-3 flex items-center justify-center gap-2 bg-red-900/20 text-red-400 hover:bg-red-900/40 rounded-xl text-sm font-bold transition">退出登录</button>
+      <div class="p-6 border-t border-gray-800/50">
+        <button @click="logout" class="w-full py-4 flex items-center justify-center gap-2 bg-red-900/20 text-red-400 hover:bg-red-900/40 rounded-xl text-base font-bold transition border border-red-900/30">
+          <span>🚪</span> 退出登录
+        </button>
       </div>
     </aside>
 
     <div v-if="isAuthenticated" class="flex-1 flex flex-col h-full relative z-10 w-full">
-      <header class="md:hidden h-14 bg-gray-900/90 backdrop-blur border-b border-gray-800 flex items-center justify-between px-4 flex-shrink-0 z-30">
-        <div class="flex items-center gap-2"><span class="text-lg">🛡️</span><span class="font-bold text-white text-lg">管理后台</span></div>
-        <button @click="logout" class="w-8 h-8 flex items-center justify-center rounded-full bg-red-900/20 text-red-400">✕</button>
+      <header class="md:hidden h-16 bg-gray-900/90 backdrop-blur border-b border-gray-800 flex items-center justify-between px-4 flex-shrink-0 z-30">
+        <div class="flex items-center gap-3"><span class="text-2xl">🛡️</span><span class="font-bold text-white text-xl">管理后台</span></div>
+        <button @click="logout" class="w-10 h-10 flex items-center justify-center rounded-full bg-red-900/20 text-red-400">✕</button>
       </header>
 
       <main class="flex-1 overflow-y-auto custom-scrollbar pb-24 md:pb-0">
         
-        <div v-if="currentTab === 'dashboard'" class="p-4 md:p-8 space-y-8 max-w-7xl mx-auto animate-fade-in">
-          <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
-            <div v-for="(val, key) in displayStats" :key="key" class="bg-gray-900/60 border border-gray-700/50 p-4 rounded-2xl backdrop-blur-sm">
-              <div class="text-xs text-gray-500 uppercase font-bold mb-1">{{ val.label }}</div>
-              <div :class="['text-2xl md:text-3xl font-black', val.color]">{{ val.value }}</div>
+        <div v-if="currentTab === 'dashboard'" class="p-4 md:p-10 space-y-10 max-w-[1600px] mx-auto animate-fade-in">
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+            <div v-for="(val, key) in displayStats" :key="key" class="bg-gray-900/60 border border-gray-700/50 p-6 rounded-2xl backdrop-blur-sm hover:border-gray-600 transition">
+              <div class="text-sm text-gray-400 font-bold mb-2 uppercase tracking-wide">{{ val.label }}</div>
+              <div :class="['text-4xl font-black tracking-tight', val.color]">{{ val.value }}</div>
             </div>
           </div>
 
           <div>
-            <div class="flex justify-between items-center mb-4">
-              <h2 class="text-xl font-bold text-white flex items-center gap-2"><span class="w-2 h-6 bg-pink-500 rounded-full"></span> 实时监控</h2>
-              <button @click="fetchDashboardData" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded text-xs transition border border-gray-700">🔄 刷新</button>
+            <div class="flex justify-between items-center mb-6">
+              <h2 class="text-2xl font-bold text-white flex items-center gap-3"><span class="w-2 h-8 bg-pink-500 rounded-full shadow-[0_0_15px_#ec4899]"></span> 实时监控</h2>
+              <button @click="fetchDashboardData" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm font-bold transition border border-gray-700 hover:text-white">🔄 刷新数据</button>
             </div>
             
-            <div v-if="activeRooms.length === 0" class="text-center py-16 bg-gray-900/30 border border-dashed border-gray-800 rounded-2xl text-gray-500">
-              <div class="text-4xl mb-2">💤</div><p>无活跃房间</p>
+            <div v-if="activeRooms.length === 0" class="text-center py-24 bg-gray-900/30 border-2 border-dashed border-gray-800 rounded-3xl text-gray-500">
+              <div class="text-6xl mb-4">💤</div><p class="text-lg font-medium">当前无活跃房间</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
-              <div v-for="room in activeRooms" :key="room.id" class="bg-gray-900/80 border border-gray-700/50 rounded-2xl p-5 hover:border-pink-500/50 transition flex flex-col h-full group relative overflow-hidden">
-                <div class="flex justify-between items-start mb-4">
-                  <div class="overflow-hidden pr-2">
-                    <h3 class="font-bold text-lg text-white truncate">{{ room.name }}</h3>
-                    <div class="text-xs text-gray-500 font-mono">ID: {{ room.id }}</div>
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              <div v-for="room in activeRooms" :key="room.id" class="bg-gray-900/80 border border-gray-700/50 rounded-2xl p-6 hover:border-pink-500/50 transition flex flex-col h-full group relative overflow-hidden shadow-lg">
+                <div class="flex justify-between items-start mb-5">
+                  <div class="overflow-hidden pr-3">
+                    <h3 class="font-bold text-xl text-white truncate mb-1">{{ room.name }}</h3>
+                    <div class="text-xs text-gray-400 font-mono bg-gray-800/50 inline-block px-2 py-0.5 rounded">ID: {{ room.id }}</div>
                   </div>
-                  <span :class="['shrink-0 text-[10px] px-2 py-1 rounded border', room.mode === 'private' ? 'bg-yellow-900/30 text-yellow-500 border-yellow-900/50' : 'bg-blue-900/30 text-blue-500 border-blue-900/50']">
+                  <span :class="['shrink-0 text-xs font-bold px-3 py-1.5 rounded-lg border', room.mode === 'private' ? 'bg-yellow-900/20 text-yellow-500 border-yellow-900/50' : 'bg-blue-900/20 text-blue-400 border-blue-900/50']">
                     {{ room.mode === 'private' ? '🔒 私密' : '🌐 公开' }}
                   </span>
                 </div>
                 
-                <div class="flex-1 space-y-2 text-sm bg-black/20 p-3 rounded-lg mb-4">
-                  <div class="flex justify-between"><span>房主</span><span class="text-gray-200 truncate">{{ room.hostName }}</span></div>
-                  <div class="flex justify-between"><span>在线</span><span class="text-gray-200">{{ room.playerCount }}人</span></div>
-                  <div class="flex justify-between text-gray-500 border-t border-gray-700/50 pt-2 mt-2">
-                    <span>创建于</span><span class="font-mono text-gray-400 text-xs">{{ formatTime(room.createdAt) }}</span>
+                <div class="flex-1 space-y-3 text-sm bg-black/20 p-4 rounded-xl mb-5 border border-white/5">
+                  <div class="flex justify-between items-center"><span class="text-gray-500">房主</span><span class="text-gray-200 font-bold truncate max-w-[150px]">{{ room.hostName }}</span></div>
+                  <div class="flex justify-between items-center"><span class="text-gray-500">在线人数</span><span class="text-gray-200 font-bold text-base">{{ room.playerCount }} <span class="text-xs font-normal text-gray-500">人</span></span></div>
+                  <div class="flex justify-between items-center border-t border-gray-700/50 pt-3 mt-1">
+                    <span class="text-gray-500">创建时间</span><span class="font-mono text-gray-400">{{ formatTime(room.createdAt) }}</span>
                   </div>
                 </div>
 
-                <div class="flex gap-2">
-                  <button @click="spectateRoom(room.id)" class="flex-1 py-2.5 bg-gray-800 hover:bg-pink-600 text-gray-400 hover:text-white rounded-xl text-sm font-bold transition border border-gray-700 hover:border-pink-500 flex items-center justify-center gap-2">
-                    <span>👁️</span> 监控
+                <div class="flex gap-3">
+                  <button @click="spectateRoom(room.id)" class="flex-1 py-3 bg-gray-800 hover:bg-pink-600 text-gray-300 hover:text-white rounded-xl text-sm font-bold transition border border-gray-700 hover:border-pink-500 flex items-center justify-center gap-2 shadow-sm">
+                    <span>👁️</span> 监控画面
                   </button>
-                  <button @click="confirmAction('dismissRoom', room.id)" class="px-4 py-2.5 bg-red-900/20 hover:bg-red-600 text-red-500 hover:text-white rounded-xl text-sm font-bold transition border border-red-900/30 hover:border-red-500 flex items-center justify-center" title="解散房间">
-                    <span>💥</span> 注销
+                  <button @click="confirmAction('dismissRoom', room.id)" class="px-5 py-3 bg-red-900/10 hover:bg-red-600 text-red-500 hover:text-white rounded-xl text-sm font-bold transition border border-red-900/30 hover:border-red-500 flex items-center justify-center shadow-sm" title="解散房间">
+                    <span>💥</span>
                   </button>
                 </div>
               </div>
@@ -92,27 +94,27 @@
         </div>
 
         <div v-if="currentTab === 'categories'" class="min-h-full flex flex-col animate-fade-in relative">
-          <div class="sticky top-0 z-50 bg-[#0a0c10]/95 backdrop-blur-xl border-b border-gray-800/50 px-4 md:px-8 py-4 shadow-xl transition-all duration-300">
+          <div class="sticky top-0 z-50 bg-[#0a0c10]/95 backdrop-blur-xl border-b border-gray-800/50 px-4 md:px-10 py-5 shadow-xl transition-all duration-300">
             <div class="flex justify-between items-center max-w-7xl mx-auto">
-              <h2 class="text-xl font-bold text-white flex items-center gap-2"><span class="w-2 h-6 bg-blue-500 rounded-full shadow-[0_0_10px_currentColor]"></span> 分类管理</h2>
-              <div class="flex gap-2">
-                <button @click="openCreateCategory" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-sm font-bold transition shadow-lg flex items-center gap-1"><span>➕</span> 新增分类</button>
-                <button @click="fetchCategoriesStats" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm border border-gray-700">🔄</button>
+              <h2 class="text-2xl font-bold text-white flex items-center gap-3"><span class="w-2 h-8 bg-blue-500 rounded-full shadow-[0_0_15px_#3b82f6]"></span> 分类管理</h2>
+              <div class="flex gap-3">
+                <button @click="openCreateCategory" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-sm font-bold transition shadow-lg shadow-purple-900/30 flex items-center gap-2"><span>➕</span> 新增分类</button>
+                <button @click="fetchCategoriesStats" class="px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl text-sm border border-gray-700 font-bold">🔄</button>
               </div>
             </div>
           </div>
-          <div class="p-4 md:p-8 w-full max-w-7xl mx-auto">
-             <div v-if="categories.length === 0" class="text-center py-20 text-gray-500 border border-dashed border-gray-800 rounded-xl">暂无分类，请点击右上角创建</div>
-             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-               <div v-for="cat in categories" :key="cat.id" class="bg-gray-900/60 border border-gray-700/50 p-5 rounded-xl hover:border-blue-500/30 transition flex justify-between items-center group">
+          <div class="p-4 md:p-10 w-full max-w-7xl mx-auto">
+             <div v-if="categories.length === 0" class="text-center py-24 text-gray-500 border-2 border-dashed border-gray-800 rounded-3xl text-lg">暂无分类，请点击右上角创建</div>
+             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+               <div v-for="cat in categories" :key="cat.id" class="bg-gray-900/60 border border-gray-700/50 p-6 rounded-2xl hover:border-blue-500/50 transition flex justify-between items-start group shadow-md hover:bg-gray-900/80">
                  <div>
-                   <h3 class="font-bold text-lg text-white group-hover:text-blue-400 transition">{{ cat.name }}</h3>
-                   <p class="text-xs text-gray-400 mt-1 line-clamp-1 italic">{{ cat.description || '暂无介绍' }}</p>
-                   <div class="text-[10px] text-gray-600 mt-2 font-mono">包含 {{ cat.count || 0 }} 题</div>
+                   <h3 class="font-bold text-xl text-white group-hover:text-blue-400 transition mb-1">{{ cat.name }}</h3>
+                   <p class="text-sm text-gray-400 mt-1 line-clamp-2 leading-relaxed">{{ cat.description || '暂无介绍' }}</p>
+                   <div class="text-xs text-gray-500 mt-4 font-mono bg-black/30 inline-block px-2 py-1 rounded">📚 包含 {{ cat.count || 0 }} 题</div>
                  </div>
-                 <div class="flex gap-2 opacity-80 group-hover:opacity-100 transition">
-                   <button @click="openEditCategory(cat)" class="w-8 h-8 flex items-center justify-center bg-gray-800 text-gray-400 hover:bg-blue-900/30 hover:text-blue-400 rounded-lg transition" title="重命名">✏️</button>
-                   <button @click="confirmAction('deleteCategory', cat.id)" class="w-8 h-8 flex items-center justify-center bg-gray-800 text-gray-500 hover:bg-red-900/30 hover:text-red-500 rounded-lg transition" title="删除分类">🗑️</button>
+                 <div class="flex gap-2 opacity-60 group-hover:opacity-100 transition">
+                   <button @click="openEditCategory(cat)" class="w-9 h-9 flex items-center justify-center bg-gray-800 text-gray-400 hover:bg-blue-600 hover:text-white rounded-lg transition border border-gray-700">✏️</button>
+                   <button @click="confirmAction('deleteCategory', cat.id)" class="w-9 h-9 flex items-center justify-center bg-gray-800 text-gray-400 hover:bg-red-600 hover:text-white rounded-lg transition border border-gray-700">🗑️</button>
                  </div>
                </div>
              </div>
@@ -120,71 +122,86 @@
         </div>
 
         <div v-if="currentTab === 'penalties'" class="min-h-full flex flex-col animate-fade-in relative">
-          <div class="sticky top-0 z-50 bg-[#0a0c10]/95 backdrop-blur-xl border-b border-gray-800/50 px-4 md:px-8 py-4 shadow-xl transition-all duration-300">
+          <div class="sticky top-0 z-50 bg-[#0a0c10]/95 backdrop-blur-xl border-b border-gray-800/50 px-4 md:px-10 py-5 shadow-xl transition-all duration-300">
             <div class="flex flex-col xl:flex-row justify-between gap-4 max-w-7xl mx-auto">
-              <div class="flex flex-wrap items-center gap-3">
-                 <h2 class="text-xl font-bold text-white flex items-center gap-2 mr-2">
-                   <span :class="['w-2 h-6 rounded-full transition-colors shadow-[0_0_10px_currentColor]', isRecycleBin ? 'bg-red-500 text-red-500' : 'bg-purple-500 text-purple-500']"></span> 
+              <div class="flex flex-wrap items-center gap-4">
+                 <h2 class="text-2xl font-bold text-white flex items-center gap-3 mr-2">
+                   <span :class="['w-2 h-8 rounded-full transition-colors shadow-[0_0_15px_currentColor]', isRecycleBin ? 'bg-red-500 text-red-500' : 'bg-purple-500 text-purple-500']"></span> 
                    {{ isRecycleBin ? '回收站' : '题库中心' }}
                  </h2>
                  <div v-if="!isRecycleBin" class="flex gap-2">
-                   <button @click="openBatchModal" class="px-3 py-1.5 bg-blue-900/30 hover:bg-blue-900/50 text-blue-300 border border-blue-700/50 rounded-lg text-xs font-bold transition flex items-center gap-1"><span>📥</span> 导入</button>
+                   <button @click="openBatchModal" class="px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 rounded-lg text-sm font-bold transition flex items-center gap-2"><span>📥</span> 导入题目</button>
                  </div>
-                 <div class="w-px h-6 bg-gray-800 mx-1"></div>
-                 <button @click="isRecycleBin = !isRecycleBin" :class="['px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 border', isRecycleBin ? 'bg-red-500/20 text-red-400 border-red-500/50' : 'bg-gray-800 text-gray-400 border-gray-700 hover:text-white']">
-                   <span v-if="isRecycleBin">↩️ 返回题库</span><span v-else>🗑️ 回收站</span>
+                 <div class="w-px h-8 bg-gray-800 mx-2"></div>
+                 <button @click="isRecycleBin = !isRecycleBin" :class="['px-4 py-2 rounded-lg text-sm font-bold transition flex items-center gap-2 border', isRecycleBin ? 'bg-red-500/10 text-red-400 border-red-500/30 hover:bg-red-500/20' : 'bg-gray-800 text-gray-300 border-gray-700 hover:text-white hover:bg-gray-700']">
+                   <span v-if="isRecycleBin">↩️ 返回题库</span><span v-else>🗑️ 垃圾回收站</span>
                  </button>
               </div>
-              <div class="flex gap-2 w-full xl:w-auto">
-                 <select v-if="!isRecycleBin" v-model="filterStatus" class="flex-1 xl:flex-none bg-gray-900 border border-gray-700 text-gray-300 text-sm rounded-lg px-3 py-2 outline-none focus:border-purple-500 transition">
-                   <option value="">全部状态</option><option value="PENDING">🟠 待审核</option><option value="APPROVED">🟢 已通过</option><option value="REJECTED">🔴 已拒绝</option>
+              <div class="flex gap-3 w-full xl:w-auto">
+                 <select v-if="!isRecycleBin" v-model="filterStatus" class="flex-1 xl:flex-none w-40 bg-gray-900 border border-gray-700 text-gray-200 text-sm font-medium rounded-lg px-4 py-2 outline-none focus:border-purple-500 transition">
+                   <option value="">🔮 全部状态</option><option value="PENDING">🟠 待审核</option><option value="APPROVED">🟢 已通过</option><option value="REJECTED">🔴 已拒绝</option>
                  </select>
-                 <button @click="fetchPenalties" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition border border-gray-700 active:scale-95">🔄</button>
+                 <button @click="fetchPenalties" class="px-5 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm font-bold transition border border-gray-700 active:scale-95 text-white">🔄 刷新</button>
               </div>
             </div>
           </div>
 
-          <div class="px-4 md:px-8 py-6 w-full max-w-7xl mx-auto flex-1">
-            <div :class="['bg-gray-900/60 border rounded-2xl overflow-hidden shadow-xl transition-colors relative z-0', isRecycleBin ? 'border-red-900/30' : 'border-gray-700/50']">
+          <div class="px-4 md:px-10 py-8 w-full max-w-7xl mx-auto flex-1">
+            <div :class="['bg-gray-900/60 border rounded-2xl overflow-hidden shadow-2xl transition-colors relative z-0', isRecycleBin ? 'border-red-900/30' : 'border-gray-700/50']">
               <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm text-gray-400 min-w-[600px]">
-                  <thead class="bg-gray-950/80 text-xs uppercase text-gray-500">
-                    <tr><th class="px-4 py-4 font-bold">提交者</th><th class="px-4 py-4 w-[40%] font-bold">内容</th><th class="px-4 py-4 font-bold">属性</th><th class="px-4 py-4 font-bold">状态</th><th class="px-4 py-4 text-right font-bold">操作</th></tr>
+                <table class="w-full text-left text-sm min-w-[800px]">
+                  <thead class="bg-gray-950/80 text-xs uppercase text-gray-400 border-b border-gray-800">
+                    <tr>
+                        <th class="px-6 py-5 font-bold tracking-wider">提交者</th>
+                        <th class="px-6 py-5 w-[45%] font-bold tracking-wider">内容</th>
+                        <th class="px-6 py-5 font-bold tracking-wider">分类 / 属性</th>
+                        <th class="px-6 py-5 font-bold tracking-wider">状态</th>
+                        <th class="px-6 py-5 text-right font-bold tracking-wider">操作</th>
+                    </tr>
                   </thead>
                   <tbody class="divide-y divide-gray-800/50">
-                    <tr v-if="penalties.length === 0"><td colspan="5" class="px-6 py-16 text-center text-gray-600 font-mono">暂无数据</td></tr>
-                    <tr v-for="p in penalties" :key="p.id" class="hover:bg-white/5 transition group">
-                      <td class="px-4 py-4 align-top"><div class="text-gray-300 font-bold text-xs">{{ p.creator || '匿名' }}</div><div class="font-mono text-[10px] text-gray-600 mt-1">#{{ p.id }}</div></td>
+                    <tr v-if="penalties.length === 0"><td colspan="5" class="px-6 py-24 text-center text-gray-500 font-medium text-lg">暂无数据</td></tr>
+                    <tr v-for="p in penalties" :key="p.id" class="hover:bg-white/[0.03] transition group">
+                      <td class="px-6 py-5 align-top">
+                          <div class="text-gray-200 font-bold text-sm">{{ p.creator || '匿名' }}</div>
+                          <div class="font-mono text-xs text-gray-500 mt-1 bg-black/20 inline-block px-1.5 rounded">#{{ p.id }}</div>
+                      </td>
                       
-                      <td class="px-4 py-4 align-top group-hover:text-blue-200 transition cursor-pointer" @click="openEditPenalty(p)" title="点击编辑详情">
-                        <p class="text-white text-sm break-words">{{ p.content }}</p>
+                      <td class="px-6 py-5 align-top group-hover:text-blue-300 transition cursor-pointer" @click="openEditPenalty(p)" title="点击编辑详情">
+                        <p class="text-gray-200 text-[15px] font-medium leading-relaxed break-words">{{ p.content }}</p>
                       </td>
 
-                      <td class="px-4 py-4 align-top">
-                        <div class="flex flex-wrap gap-1.5">
-                          <span class="text-[10px] bg-gray-800 px-1.5 py-0.5 rounded border border-gray-700">{{ p.category?.name }}</span>
-                          <span :class="['text-[10px] px-1.5 py-0.5 rounded border', p.type === 'truth' ? 'text-blue-400 bg-blue-900/10 border-blue-900/30' : 'text-red-400 bg-red-900/10 border-red-900/30']">{{ p.type === 'truth' ? '真' : '险' }} Lv.{{ p.level }}</span>
+                      <td class="px-6 py-5 align-top">
+                        <div class="flex flex-col gap-2 items-start">
+                          <span class="text-xs bg-gray-800 text-gray-300 px-2 py-1 rounded border border-gray-700/50 font-medium">{{ p.category?.name }}</span>
+                          <span :class="['text-xs px-2 py-1 rounded border font-bold flex items-center gap-1', p.type === 'truth' ? 'text-blue-400 bg-blue-900/10 border-blue-900/30' : 'text-red-400 bg-red-900/10 border-red-900/30']">
+                              {{ p.type === 'truth' ? '🔵 真心话' : '🔴 大冒险' }} 
+                              <span class="opacity-50">|</span> 
+                              Lv.{{ p.level }}
+                          </span>
                         </div>
                       </td>
-                      <td class="px-4 py-4 align-top">
-                        <span v-if="isRecycleBin" class="text-red-500 text-xs font-bold bg-red-900/20 px-2 py-1 rounded-full">🗑️ 已删除</span>
+
+                      <td class="px-6 py-5 align-top">
+                        <span v-if="isRecycleBin" class="text-red-400 text-xs font-bold bg-red-900/20 px-3 py-1.5 rounded-full border border-red-900/30">🗑️ 已删除</span>
                         <template v-else>
-                           <span v-if="p.status === 'PENDING'" class="text-yellow-500 text-xs font-bold bg-yellow-900/10 px-2 py-1 rounded-full">待审</span>
-                           <span v-else-if="p.status === 'APPROVED'" class="text-green-500 text-xs font-bold bg-green-900/10 px-2 py-1 rounded-full">通过</span>
-                           <span v-else class="text-red-500 text-xs font-bold bg-red-900/10 px-2 py-1 rounded-full">拒绝</span>
+                           <span v-if="p.status === 'PENDING'" class="text-yellow-400 text-xs font-bold bg-yellow-900/20 px-3 py-1.5 rounded-full border border-yellow-900/30">🟠 待审核</span>
+                           <span v-else-if="p.status === 'APPROVED'" class="text-green-400 text-xs font-bold bg-green-900/20 px-3 py-1.5 rounded-full border border-green-900/30">🟢 已通过</span>
+                           <span v-else class="text-red-400 text-xs font-bold bg-red-900/20 px-3 py-1.5 rounded-full border border-red-900/30">🔴 已拒绝</span>
                         </template>
                       </td>
-                      <td class="px-4 py-4 text-right align-top">
-                        <div class="flex justify-end gap-2 opacity-80 group-hover:opacity-100 transition">
+
+                      <td class="px-6 py-5 text-right align-top">
+                        <div class="flex justify-end gap-3 opacity-60 group-hover:opacity-100 transition">
                           <template v-if="isRecycleBin">
-                            <button @click="confirmAction('restore', p.id)" class="w-8 h-8 bg-green-600/20 border border-green-600/50 hover:bg-green-600 text-green-500 hover:text-white rounded-lg flex items-center justify-center transition" title="恢复">♻️</button>
-                            <button @click="confirmAction('hardDelete', p.id)" class="w-8 h-8 bg-red-600/20 border border-red-600/50 hover:bg-red-600 text-red-500 hover:text-white rounded-lg flex items-center justify-center transition" title="彻底粉碎">💥</button>
+                            <button @click="confirmAction('restore', p.id)" class="w-9 h-9 bg-green-600/10 border border-green-600/40 hover:bg-green-600 text-green-500 hover:text-white rounded-lg flex items-center justify-center transition" title="恢复">♻️</button>
+                            <button @click="confirmAction('hardDelete', p.id)" class="w-9 h-9 bg-red-600/10 border border-red-600/40 hover:bg-red-600 text-red-500 hover:text-white rounded-lg flex items-center justify-center transition" title="彻底粉碎">💥</button>
                           </template>
                           <template v-else>
-                             <button @click="openEditPenalty(p)" class="w-8 h-8 bg-blue-600/20 border border-blue-600/50 hover:bg-blue-600 text-blue-500 hover:text-white rounded-lg flex items-center justify-center transition" title="编辑详情">✏️</button>
-                             <button v-if="p.status !== 'APPROVED'" @click="updateStatus(p.id, 'APPROVED')" class="w-8 h-8 bg-green-600/20 border border-green-600/50 hover:bg-green-600 text-green-500 hover:text-white rounded-lg flex items-center justify-center transition" title="通过">✓</button>
-                             <button v-if="p.status !== 'REJECTED'" @click="updateStatus(p.id, 'REJECTED')" class="w-8 h-8 bg-yellow-600/20 border border-yellow-600/50 hover:bg-yellow-600 text-yellow-500 hover:text-white rounded-lg flex items-center justify-center transition" title="拒绝">✕</button>
-                             <button @click="confirmAction('softDelete', p.id)" class="w-8 h-8 bg-gray-800 border border-gray-700 hover:bg-red-600 hover:border-red-600 text-gray-400 hover:text-white rounded-lg flex items-center justify-center transition" title="删除">🗑️</button>
+                             <button @click="openEditPenalty(p)" class="w-9 h-9 bg-blue-600/10 border border-blue-600/40 hover:bg-blue-600 text-blue-500 hover:text-white rounded-lg flex items-center justify-center transition" title="编辑详情">✏️</button>
+                             <button v-if="p.status !== 'APPROVED'" @click="updateStatus(p.id, 'APPROVED')" class="w-9 h-9 bg-green-600/10 border border-green-600/40 hover:bg-green-600 text-green-500 hover:text-white rounded-lg flex items-center justify-center transition" title="通过">✓</button>
+                             <button v-if="p.status !== 'REJECTED'" @click="updateStatus(p.id, 'REJECTED')" class="w-9 h-9 bg-yellow-600/10 border border-yellow-600/40 hover:bg-yellow-600 text-yellow-500 hover:text-white rounded-lg flex items-center justify-center transition" title="拒绝">✕</button>
+                             <button @click="confirmAction('softDelete', p.id)" class="w-9 h-9 bg-gray-800 border border-gray-600 hover:bg-red-600 hover:border-red-600 text-gray-400 hover:text-white rounded-lg flex items-center justify-center transition" title="删除">🗑️</button>
                           </template>
                         </div>
                       </td>
@@ -193,10 +210,10 @@
                 </table>
               </div>
               
-              <div class="p-4 border-t border-gray-800 flex justify-between items-center bg-gray-900/30">
-                 <button @click="changePage(-1)" :disabled="page <= 1" class="text-xs px-3 py-1.5 bg-gray-800 rounded hover:bg-gray-700 disabled:opacity-30 border border-gray-700 transition">上一页</button>
-                 <span class="text-xs font-mono text-gray-500">PAGE {{ page }} / {{ totalPages }} <span class="opacity-50">({{ totalCount }} items)</span></span>
-                 <button @click="changePage(1)" :disabled="page >= totalPages" class="text-xs px-3 py-1.5 bg-gray-800 rounded hover:bg-gray-700 disabled:opacity-30 border border-gray-700 transition">下一页</button>
+              <div class="p-5 border-t border-gray-800 flex justify-between items-center bg-gray-900/30">
+                 <button @click="changePage(-1)" :disabled="page <= 1" class="text-sm px-4 py-2 bg-gray-800 rounded-lg hover:bg-gray-700 disabled:opacity-30 border border-gray-700 transition font-bold text-gray-300">上一页</button>
+                 <span class="text-sm font-mono text-gray-400 bg-black/20 px-3 py-1 rounded border border-gray-800">PAGE {{ page }} / {{ totalPages }} <span class="opacity-50 mx-1">|</span> 总数 {{ totalCount }}</span>
+                 <button @click="changePage(1)" :disabled="page >= totalPages" class="text-sm px-4 py-2 bg-gray-800 rounded-lg hover:bg-gray-700 disabled:opacity-30 border border-gray-700 transition font-bold text-gray-300">下一页</button>
               </div>
             </div>
           </div>
@@ -216,8 +233,8 @@
           <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500"></div>
           <div class="text-center mb-8"><div class="text-6xl mb-4">🛡️</div><h1 class="text-3xl font-bold text-white">系统锁定</h1></div>
           <div class="space-y-4">
-            <input v-model="inputPassword" type="password" placeholder="请输入管理员密钥" class="w-full px-4 py-4 bg-gray-950 border border-gray-700 rounded-xl text-center text-2xl font-bold text-white outline-none transition" @keyup.enter="handleLogin">
-            <button @click="handleLogin" class="w-full py-4 bg-gradient-to-r from-pink-600 to-purple-600 hover:opacity-90 text-white font-bold rounded-xl transition shadow-lg">验证身份</button>
+            <input v-model="inputPassword" type="password" placeholder="请输入管理员密钥" class="w-full px-4 py-4 bg-gray-950 border border-gray-700 rounded-xl text-center text-2xl font-bold font-sans tracking-normal text-white placeholder:text-base placeholder:font-normal placeholder:tracking-normal focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 outline-none transition appearance-none" @keyup.enter="handleLogin">
+            <button @click="handleLogin" class="w-full py-4 bg-gradient-to-r from-pink-600 to-purple-600 hover:opacity-90 text-white font-bold rounded-xl transition shadow-lg active:scale-[0.98]">验证身份</button>
           </div>
         </div>
       </div>
@@ -225,15 +242,18 @@
 
     <transition name="fade">
         <div v-if="showCategoryModal" class="fixed inset-0 z-[9000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-            <div class="bg-gray-800 w-full max-w-sm rounded-2xl border border-gray-700 p-6 animate-scale-in">
-            <h3 class="text-lg font-bold text-white mb-4">🏷️ {{ isEditingCategory ? '编辑分类' : '新增分类' }}</h3>
-            <label class="text-[10px] text-gray-500 mb-1 block uppercase font-bold">分类名称</label>
-            <input v-model="categoryForm.name" placeholder="例如：情侣专属" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white mb-4 focus:border-purple-500 outline-none">
-            <label class="text-[10px] text-gray-500 mb-1 block uppercase font-bold">分类介绍</label>
-            <textarea v-model="categoryForm.description" placeholder="简要描述一下这个分类的应用场景..." class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 text-white mb-6 focus:border-purple-500 outline-none resize-none h-24 text-sm"></textarea>
-            <div class="flex gap-3">
-                <button @click="showCategoryModal = false" class="flex-1 py-2 bg-gray-700 rounded-lg text-sm font-bold text-gray-300">取消</button>
-                <button @click="submitCategory" class="flex-1 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg text-sm font-bold text-white">{{ isEditingCategory ? '保存修改' : '立即创建' }}</button>
+            <div class="bg-gray-800 w-full max-w-sm rounded-2xl border border-gray-700 p-6 animate-scale-in shadow-2xl">
+            <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">🏷️ {{ isEditingCategory ? '编辑分类' : '新增分类' }}</h3>
+            
+            <label class="text-xs text-gray-400 mb-2 block uppercase font-bold tracking-wide">分类名称</label>
+            <input v-model="categoryForm.name" placeholder="例如：情侣专属" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white text-base mb-5 focus:border-purple-500 outline-none transition focus:ring-2 focus:ring-purple-500/20">
+            
+            <label class="text-xs text-gray-400 mb-2 block uppercase font-bold tracking-wide">分类介绍</label>
+            <textarea v-model="categoryForm.description" placeholder="简要描述一下这个分类的应用场景..." class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-3 text-white text-sm mb-6 focus:border-purple-500 outline-none resize-none h-28 focus:ring-2 focus:ring-purple-500/20"></textarea>
+            
+            <div class="flex gap-4">
+                <button @click="showCategoryModal = false" class="flex-1 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl text-sm font-bold text-gray-200 transition">取消</button>
+                <button @click="submitCategory" class="flex-1 py-3 bg-purple-600 hover:bg-purple-500 rounded-xl text-sm font-bold text-white shadow-lg transition">{{ isEditingCategory ? '保存修改' : '立即创建' }}</button>
             </div>
             </div>
         </div>
@@ -241,42 +261,46 @@
 
     <transition name="fade">
       <div v-if="showEditPenaltyModal" class="fixed inset-0 z-[9000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-gray-800 w-full max-w-lg rounded-2xl border border-gray-700 p-6 animate-scale-in flex flex-col shadow-2xl">
-          <h3 class="text-lg font-bold text-white mb-5 flex items-center gap-2"><span class="bg-blue-500/20 text-blue-400 p-1.5 rounded-lg">✏️</span> 编辑题目详情</h3>
-          <div class="grid grid-cols-2 gap-4 mb-5">
-             <div class="bg-gray-900/50 p-3 rounded-xl border border-gray-700/50">
-               <label class="text-[10px] text-gray-500 mb-1.5 block uppercase font-bold tracking-wider">所属分类</label>
+        <div class="bg-gray-800 w-full max-w-lg rounded-3xl border border-gray-700 p-8 animate-scale-in flex flex-col shadow-2xl">
+          <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2"><span class="bg-blue-500/20 text-blue-400 p-1.5 rounded-lg">✏️</span> 编辑题目详情</h3>
+          
+          <div class="grid grid-cols-2 gap-5 mb-6">
+             <div class="bg-gray-900/50 p-4 rounded-2xl border border-gray-700/50">
+               <label class="text-xs text-gray-400 mb-2 block uppercase font-bold tracking-wider">所属分类</label>
                <select v-model="editPenaltyForm.categoryId" class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-500 outline-none transition">
                  <option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option>
                </select>
              </div>
-             <div class="bg-gray-900/50 p-3 rounded-xl border border-gray-700/50">
-               <label class="text-[10px] text-gray-500 mb-1.5 block uppercase font-bold tracking-wider">题目类型</label>
+             <div class="bg-gray-900/50 p-4 rounded-2xl border border-gray-700/50">
+               <label class="text-xs text-gray-400 mb-2 block uppercase font-bold tracking-wider">题目类型</label>
                <select v-model="editPenaltyForm.type" class="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-500 outline-none transition">
                  <option value="truth">🔵 真心话</option><option value="dare">🔴 大冒险</option>
                </select>
              </div>
           </div>
-          <div class="mb-6 bg-gray-900/50 p-4 rounded-xl border border-gray-700/50">
-             <div class="flex justify-between items-end mb-3">
-                <label class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">难度等级 (Level)</label>
-                <div :class="['text-sm font-black transition-colors duration-300 flex items-center gap-2', getLevelColor(editPenaltyForm.level)]">
-                   <span class="text-xs opacity-70">Lv.{{ editPenaltyForm.level }}</span><span>{{ getLevelLabel(editPenaltyForm.level) }}</span>
+
+          <div class="mb-6 bg-gray-900/50 p-5 rounded-2xl border border-gray-700/50">
+             <div class="flex justify-between items-end mb-4">
+                <label class="text-xs text-gray-400 uppercase font-bold tracking-wider">难度等级</label>
+                <div :class="['text-base font-black transition-colors duration-300 flex items-center gap-2', getLevelColor(editPenaltyForm.level)]">
+                   <span class="text-sm opacity-70">Lv.{{ editPenaltyForm.level }}</span><span>{{ getLevelLabel(editPenaltyForm.level) }}</span>
                 </div>
              </div>
              <div class="relative w-full h-8 flex items-center">
                 <input type="range" v-model.number="editPenaltyForm.level" min="1" max="5" step="1" :class="['w-full cursor-pointer transition-all', getSliderAccent(editPenaltyForm.level)]">
              </div>
-             <div class="flex justify-between px-1">
-                <span v-for="i in 5" :key="i" :class="['text-[10px] font-bold transition-colors duration-300', editPenaltyForm.level >= i ? getLevelColor(i) : 'text-gray-700']">{{ i }}</span>
+             <div class="flex justify-between px-1 mt-2">
+                <span v-for="i in 5" :key="i" :class="['text-xs font-bold transition-colors duration-300', editPenaltyForm.level >= i ? getLevelColor(i) : 'text-gray-600']">{{ i }}</span>
              </div>
           </div>
-          <div class="flex-1 mb-6 flex flex-col">
-            <label class="text-[10px] text-gray-500 mb-2 block uppercase font-bold tracking-wider">题目内容</label>
-            <textarea v-model="editPenaltyForm.content" class="w-full flex-1 min-h-[120px] bg-gray-900 border border-gray-600 rounded-xl p-4 text-white text-sm focus:border-blue-500 outline-none resize-none leading-relaxed shadow-inner"></textarea>
+
+          <div class="flex-1 mb-8 flex flex-col">
+            <label class="text-xs text-gray-400 mb-2 block uppercase font-bold tracking-wider">题目内容</label>
+            <textarea v-model="editPenaltyForm.content" class="w-full flex-1 min-h-[140px] bg-gray-900 border border-gray-600 rounded-2xl p-5 text-white text-base focus:border-blue-500 outline-none resize-none leading-relaxed shadow-inner focus:ring-2 focus:ring-blue-500/20"></textarea>
           </div>
-          <div class="flex gap-3 mt-auto">
-            <button @click="showEditPenaltyModal = false" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl text-sm font-bold text-gray-300 transition">取消</button>
+
+          <div class="flex gap-4 mt-auto">
+            <button @click="showEditPenaltyModal = false" class="px-8 py-3 bg-gray-700 hover:bg-gray-600 rounded-xl text-sm font-bold text-gray-300 transition">取消</button>
             <button @click="submitEditPenalty" class="flex-1 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl text-sm font-bold text-white shadow-lg transition transform active:scale-95">保存修改</button>
           </div>
         </div>
@@ -285,21 +309,21 @@
 
     <transition name="fade">
       <div v-if="showBatchModal" class="fixed inset-0 z-[9000] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-gray-800 w-full max-w-2xl rounded-2xl border border-gray-700 p-6 animate-scale-in flex flex-col max-h-[90vh]">
-          <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">📥 批量导入题目 <span class="text-xs text-gray-500 font-normal">(自动审核通过)</span></h3>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-             <div><label class="text-xs text-gray-500 mb-1 block">所属分类</label><select v-model="batchForm.categoryId" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-500 outline-none"><option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option></select></div>
-             <div><label class="text-xs text-gray-500 mb-1 block">类型</label><select v-model="batchForm.type" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-500 outline-none"><option value="truth">🔵 真心话</option><option value="dare">🔴 大冒险</option></select></div>
-             <div><label class="text-xs text-gray-500 mb-1 block">强度等级</label><select v-model="batchForm.level" class="w-full bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-500 outline-none"><option value="1">Lv.1 (简单)</option><option value="3">Lv.3 (普通)</option><option value="5">Lv.5 (刺激)</option></select></div>
+        <div class="bg-gray-800 w-full max-w-2xl rounded-3xl border border-gray-700 p-8 animate-scale-in flex flex-col max-h-[90vh] shadow-2xl">
+          <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">📥 批量导入题目 <span class="text-sm text-gray-500 font-normal bg-black/20 px-2 py-0.5 rounded border border-gray-700/50">自动审核通过</span></h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+             <div><label class="text-xs text-gray-400 mb-2 block font-bold">所属分类</label><select v-model="batchForm.categoryId" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-2.5 text-sm text-white focus:border-blue-500 outline-none"><option v-for="c in categories" :key="c.id" :value="c.id">{{ c.name }}</option></select></div>
+             <div><label class="text-xs text-gray-400 mb-2 block font-bold">类型</label><select v-model="batchForm.type" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-2.5 text-sm text-white focus:border-blue-500 outline-none"><option value="truth">🔵 真心话</option><option value="dare">🔴 大冒险</option></select></div>
+             <div><label class="text-xs text-gray-400 mb-2 block font-bold">强度等级</label><select v-model="batchForm.level" class="w-full bg-gray-900 border border-gray-600 rounded-xl px-4 py-2.5 text-sm text-white focus:border-blue-500 outline-none"><option value="1">Lv.1 (简单)</option><option value="3">Lv.3 (普通)</option><option value="5">Lv.5 (刺激)</option></select></div>
           </div>
-          <div class="flex-1 min-h-0 mb-4 flex flex-col">
-            <label class="text-xs text-gray-500 mb-1 block">题目内容 (每行一条)</label>
-            <textarea v-model="batchForm.content" placeholder="粘贴题目，回车换行分割..." class="w-full flex-1 bg-gray-900 border border-gray-600 rounded-lg p-4 text-sm text-white focus:border-blue-500 outline-none resize-none leading-relaxed"></textarea>
-            <div class="text-right text-xs text-gray-500 mt-1">预计导入: {{ batchPreviewCount }} 条</div>
+          <div class="flex-1 min-h-0 mb-6 flex flex-col">
+            <label class="text-xs text-gray-400 mb-2 block font-bold">题目内容 (每行一条)</label>
+            <textarea v-model="batchForm.content" placeholder="粘贴题目，回车换行分割..." class="w-full flex-1 bg-gray-900 border border-gray-600 rounded-2xl p-5 text-sm text-white focus:border-blue-500 outline-none resize-none leading-relaxed focus:ring-2 focus:ring-blue-500/20"></textarea>
+            <div class="text-right text-xs text-gray-500 mt-2 font-mono">预计导入: {{ batchPreviewCount }} 条</div>
           </div>
-          <div class="flex gap-3">
-            <button @click="showBatchModal = false" class="px-6 py-3 bg-gray-700 rounded-lg text-sm font-bold text-gray-300">取消</button>
-            <button @click="submitBatch" class="flex-1 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-bold text-white shadow-lg">确认导入</button>
+          <div class="flex gap-4">
+            <button @click="showBatchModal = false" class="px-8 py-3 bg-gray-700 rounded-xl text-sm font-bold text-gray-300 hover:bg-gray-600 transition">取消</button>
+            <button @click="submitBatch" class="flex-1 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl text-sm font-bold text-white shadow-lg transition transform active:scale-95">确认导入</button>
           </div>
         </div>
       </div>
@@ -308,14 +332,14 @@
     <transition name="fade">
       <div v-if="modal.show" class="fixed inset-0 z-[10000] bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-gray-800 w-full max-w-sm rounded-3xl shadow-2xl border border-gray-700 p-8 animate-scale-in text-center">
-          <div class="text-6xl mb-6">{{ modal.icon || '👋' }}</div>
+          <div class="text-6xl mb-6 select-none">{{ modal.icon || '👋' }}</div>
           <h3 class="text-xl font-black text-white mb-3 tracking-tight">{{ modal.title }}</h3>
-          <p class="text-[15px] text-gray-400 mb-8 leading-relaxed px-2">{{ modal.content }}</p>
+          <p class="text-[15px] text-gray-300 mb-8 leading-relaxed px-2 font-medium">{{ modal.content }}</p>
           <div class="flex gap-4">
             <button @click="modal.show = false" class="flex-1 py-3.5 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-2xl font-black transition-all">取消</button>
             <button 
               @click="handleModalConfirm" 
-              :class="['flex-1 py-3.5 text-white rounded-2xl font-black shadow-lg transition-all', modal.isDestructive ? 'bg-gradient-to-r from-red-600 to-orange-600' : 'bg-blue-600 hover:bg-blue-500']"
+              :class="['flex-1 py-3.5 text-white rounded-2xl font-black shadow-lg transition-all', modal.isDestructive ? 'bg-gradient-to-r from-red-600 to-orange-600 hover:shadow-red-500/20' : 'bg-blue-600 hover:bg-blue-500 hover:shadow-blue-500/20']"
             >
               确定执行
             </button>
@@ -328,7 +352,6 @@
 </template>
 
 <script setup>
-// 🟢 确保引入 watch
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../api';
@@ -362,7 +385,7 @@ const filterStatus = ref('');
 const isRecycleBin = ref(false); 
 const page = ref(1);
 const pageSize = 20;
-const totalCount = ref(0); // 🟢 翻页总数
+const totalCount = ref(0);
 
 // 表单状态
 const showCategoryModal = ref(false);
@@ -382,14 +405,12 @@ const displayStats = computed(() => ({
 }));
 const batchPreviewCount = computed(() => batchForm.value.content.split('\n').filter(l => l.trim()).length);
 
-// 🟢 修复：计算总页数
 const totalPages = computed(() => {
   return Math.ceil(totalCount.value / pageSize) || 1;
 });
 
 // --- 逻辑函数 ---
 
-// 1. 认证相关
 const handleLogin = async () => {
   if (!inputPassword.value) return;
   isLoading.value = true;
@@ -417,7 +438,6 @@ const logout = () => {
   showToast('success', '已退出', '安全登出');
 };
 
-// 2. 通用确认弹窗控制
 const confirmAction = (actionType, id) => {
   let config = {};
   if (actionType === 'softDelete') config = { title: '移入回收站？', content: '该题目将不再出现在游戏中，您可以从回收站找回。', icon: '🗑️', isDestructive: true, action: () => deletePenalty(id) };
@@ -434,7 +454,6 @@ const handleModalConfirm = async () => {
   modal.value.show = false;
 };
 
-// 3. 业务数据获取
 const fetchDashboardData = async () => {
   isLoading.value = true;
   try {
@@ -462,18 +481,16 @@ const fetchPenalties = async () => {
     };
     const res = await api.get('/admin/penalties', { params });
     penalties.value = res.list || [];
-    // 🟢 修复：同步总条数
     totalCount.value = res.total || 0;
   } catch (e) {} finally { isLoading.value = false; }
 };
 
-// 🟢 修复：watch 监听筛选条件变化，自动触发刷新
+// 🟢 核心修复：监听筛选条件变化
 watch([isRecycleBin, filterStatus], () => {
-  page.value = 1; // 重置页码
+  page.value = 1;
   fetchPenalties();
 });
 
-// 4. 执行具体操作
 const executeDismissRoom = async (roomId) => {
   isLoading.value = true;
   try {
