@@ -42,11 +42,11 @@ app.use(cors({
 app.use(express.json());
 
 const server = http.createServer(app);
+// 1. 初始化增强
 const io = new Server(server, {
-  cors: {
-    origin: CLIENT_URL,
-    methods: ["GET", "POST"]
-  }
+  cors: { origin: CLIENT_URL },
+  pingTimeout: 5000,
+  pingInterval: 10000
 });
 
 const adminAuth = (req, res, next) => {
@@ -68,8 +68,17 @@ app.get('/api/categories', async (req, res) => {
 
 app.get('/api/rooms', (req, res) => {
   const roomList = Object.values(rooms)
-    .filter(r => r.mode === 'public')
-    .map(r => ({ id: r.id, name: r.name, count: r.players.length, mode: r.mode }));
+    .filter(r => 
+      r.mode === 'public' &&          // 必须是公开房
+      r.players &&                    // 确保 players 数组存在
+      r.players.length > 0            // 🟢 关键：只返回当前有人的房间
+    )
+    .map(r => ({ 
+      id: r.id, 
+      name: r.name, 
+      count: r.players.length, 
+      mode: r.mode 
+    }));
   res.json(roomList);
 });
 
@@ -205,6 +214,29 @@ app.put('/api/admin/penalties/:id/info', adminAuth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: "Error" }); }
 });
 
+// 18. 解散房间 (管理员专用)
+app.delete('/api/admin/rooms/:id', adminAuth, (req, res) => {
+  const roomId = req.params.id;
+  const room = rooms[roomId];
+
+  if (!room) {
+    return res.status(404).json({ error: "房间不存在或已解散" });
+  }
+
+  // 🟢 核心逻辑 1：向房间内所有连接的客户端发送“被解散”通知
+  io.to(roomId).emit('error_msg', '该房间已被管理员强制解散');
+  
+  // 🟢 核心逻辑 2：强制所有 Socket 离开该房间频道
+  // 注：socket.io v4+ 可以这样操作
+  io.in(roomId).socketsLeave(roomId);
+
+  // 🟢 核心逻辑 3：从内存中销毁房间
+  delete rooms[roomId];
+
+  console.log(`🚨 [管理操作] 房间 ${roomId} 已被强制解散`);
+  res.json({ success: true });
+});
+
 
 // =======================
 //     Socket.io 逻辑
@@ -332,36 +364,44 @@ io.on('connection', (socket) => {
     io.to(roomId).emit('pool_updated', { count: activeIds.length });
   });
 
-  // 🟢 修改点：离开/断开逻辑统一时区通知
+  //handleLeave 增强版
   const handleLeave = () => {
     for (const roomId in rooms) {
       const room = rooms[roomId];
       const index = room.players.findIndex(p => p.id === socket.id);
+      
       if (index !== -1) {
         const leaver = room.players[index];
         room.players.splice(index, 1);
         
-        // 玩家退出通知带上正确时间
+        // 通知离开
         socket.to(roomId).emit('player_left', { id: socket.id, time: getChinaTime() });
 
-        if (room.currentTurnPlayerId === socket.id) {
-           room.currentTurnPlayerId = null;
-           io.to(roomId).emit('turn_reset');
-           // 回合重置的系统公告
-           io.to(roomId).emit('receive_msg', {
-             id: Date.now(),
-             nickname: '系统',
-             text: `${leaver.nickname} 逃跑了，回合重置！`,
-             time: getChinaTime()
-           });
+        // 检查房间是否空了
+        if (room.players.length === 0) {
+          delete rooms[roomId];
+          console.log(`[System] Room ${roomId} deleted.`);
+        } else {
+          // 如果离开的是当前回合的人
+          if (room.currentTurnPlayerId === socket.id) {
+            room.currentTurnPlayerId = null;
+            io.to(roomId).emit('turn_reset');
+          }
+          // 如果离开的是房主，移交权限
+          if (leaver.isHost) {
+            const newHost = room.players[0];
+            newHost.isHost = true;
+            room.hostId = newHost.id; // 🟢 更新引用
+            io.to(roomId).emit('host_change', { newHostId: newHost.id });
+            io.to(roomId).emit('receive_msg', {
+              id: Date.now(),
+              nickname: '系统',
+              text: `房主离开，${newHost.nickname} 自动成为新房主`,
+              time: getChinaTime()
+            });
+          }
         }
-        
-        if (room.players.length === 0) { delete rooms[roomId]; } 
-        else if (leaver.isHost) {
-          room.players[0].isHost = true;
-          io.to(roomId).emit('host_change', { newHostId: room.players[0].id });
-        }
-        break;
+        break; // 一个 Socket 只能在一个房间，找到就跳出循环
       }
     }
   };

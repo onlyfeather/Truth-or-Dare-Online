@@ -205,7 +205,14 @@
                     <div class="flex justify-between"><span>在线</span><span class="text-gray-200">{{ room.playerCount }}人</span></div>
                     <div class="flex justify-between text-gray-500 border-t border-gray-700/50 pt-2 mt-2"><span>创建于</span><span class="font-mono text-gray-400 text-xs">{{ formatTime(room.createdAt) }}</span></div>
                  </div>
-                 <button @click="spectateRoom(room.id)" class="w-full py-2.5 bg-gray-800 hover:bg-pink-600 text-gray-400 hover:text-white rounded-xl text-sm font-bold transition border border-gray-700 hover:border-pink-500 flex items-center justify-center gap-2"><span>👁️</span> 上帝视角</button>
+                 <div class="flex gap-2"> <button @click="spectateRoom(room.id)" class="flex-1 py-2.5 bg-gray-800 hover:bg-pink-600 text-gray-400 hover:text-white rounded-xl text-sm font-bold transition border border-gray-700 hover:border-pink-500 flex items-center justify-center gap-2">
+                    <span>👁️</span> 监控
+                  </button>
+                  
+                  <button @click="dismissRoom(room.id)" class="px-4 py-2.5 bg-red-900/20 hover:bg-red-600 text-red-500 hover:text-white rounded-xl text-sm font-bold transition border border-red-900/30 hover:border-red-500 flex items-center justify-center" title="强制解散">
+                    <span>💥</span> 注销
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -412,6 +419,23 @@ const getSliderAccent = (lv) => {
   if (lv === 3) return 'accent-yellow-500';
   if (lv === 4) return 'accent-orange-500';
   return 'accent-red-600';
+};
+
+// 解散房间逻辑
+const dismissRoom = async (roomId) => {
+  if (!confirm(`确定要解散房间 ${roomId} 吗？此操作不可逆！`)) return;
+  
+  isLoading.value = true;
+  try {
+    await api.delete(`/admin/rooms/${roomId}`);
+    showToast('success', '解散成功', `房间 ${roomId} 已销毁`);
+    // 重新拉取数据刷新列表
+    fetchDashboardData();
+  } catch (e) {
+    showToast('error', '解散失败', e.response?.data?.error || '服务器错误');
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 // 初始化

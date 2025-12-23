@@ -282,19 +282,42 @@ const handleCreateRoom = () => {
   });
 };
 
-const handleJoinRoom = () => {
+// --- 修改 handleJoinRoom 逻辑 ---
+const handleJoinRoom = async () => {
   if (!nickname.value) return showToast("请先输入昵称！");
   if (!joinRoomId.value) return showToast("请选择或输入房间号！");
 
+  // 🟢 核心修复：检查当前输入的房号是否在列表中且是否为加密房
+  const targetRoom = roomList.value.find(r => r.id === joinRoomId.value.toUpperCase());
+  
+  // 更新当前的加入模式（用于控制密码框显示）
+  if (targetRoom) {
+    joinMode.value = targetRoom.mode;
+  }
+
+  // 如果是加密房且没输密码，进行拦截
+  if (joinMode.value === 'private' && !joinPassword.value) {
+    showToast("🔒 此房间需要密码，请输入！");
+    // 自动切换到 join tab 并聚焦
+    activeTab.value = 'join';
+    await nextTick();
+    if (passwordInputRef.value) {
+      passwordInputRef.value.focus();
+    }
+    return; // 拦截发送
+  }
+
   saveNickname();
-  socket.connect();
+  if (!socket.connected) socket.connect();
+  
   socket.emit('join_room', {
-    roomId: joinRoomId.value,
+    roomId: joinRoomId.value.toUpperCase(), // 统一转大写防止输入错误
     nickname: nickname.value,
     password: joinPassword.value
   });
 };
 
+// --- 优化 selectRoom 函数 ---
 const selectRoom = async (room) => {
   if (!nickname.value) {
     showToast("客官，请先在上方输入您的昵称！");
@@ -308,8 +331,8 @@ const selectRoom = async (room) => {
   if (room.mode === 'public') {
     handleJoinRoom();
   } else {
-    // 如果是私密房间，自动聚焦密码框
-    activeTab.value = 'join'; // 确保切到 join tab
+    // 如果是私密房间，提示并聚焦密码框
+    showToast("请输入房间密码");
     await nextTick();
     if (passwordInputRef.value) {
       passwordInputRef.value.focus();

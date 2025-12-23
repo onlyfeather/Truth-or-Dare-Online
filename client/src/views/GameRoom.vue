@@ -436,10 +436,7 @@ onMounted(() => {
   document.title = `房间 ${roomId} | 正在游戏`;
 
   socket.on('room_joined', initGameData);
-  socket.on('error_msg', (msg) => { 
-    showDialog({ title: '出错啦', content: msg, icon: '⚠️', onConfirm: () => router.push(isSpectator.value ? '/admin' : '/') });
-  });
-  
+ 
   socket.on('player_joined', (p) => { 
       if (!players.value.find(x => x.id === p.id)) { 
           players.value.push(p); 
@@ -460,6 +457,19 @@ onMounted(() => {
   socket.on('host_change', ({ newHostId }) => { 
       players.value.forEach(p => p.isHost = (p.id === newHostId));
       messages.value.push({ id: Date.now(), nickname: '系统', text: '房主已易位', time: getBeijinTime() });
+  });
+
+  socket.on('error_msg', (msg) => { 
+    showDialog({
+      title: '房间已关闭',
+      content: msg,
+      icon: '🚫',
+      confirmText: '返回首页',
+      onConfirm: () => {
+        sessionStorage.removeItem('room_session'); // 清理会话
+        router.push('/');
+      }
+    });
   });
 
   socket.on('receive_msg', (msg) => { messages.value.push(msg); scrollToBottom(); });
