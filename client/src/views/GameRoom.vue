@@ -32,66 +32,62 @@
         <div class="relative w-full max-w-lg aspect-[4/3] min-h-[300px] bg-gray-800/50 backdrop-blur-sm rounded-2xl border-2 border-gray-700 flex items-center justify-center p-6 text-center shadow-2xl overflow-hidden">
           
           <div v-if="gamePhase === 'IDLE'" class="space-y-4 animate-fade-in">
-             <div class="text-6xl animate-bounce">👇</div>
-             <h2 class="text-2xl font-black text-white tracking-tight">
-               {{ isHost ? '第一步：选个倒霉蛋' : '等待房主选人...' }}
-             </h2>
-             <p class="text-xs text-gray-500 font-mono uppercase tracking-widest">Online Players: {{ players.length }}</p>
+              <div class="text-6xl animate-bounce">👇</div>
+              <h2 class="text-2xl font-black text-white tracking-tight">
+                {{ isHost ? '第一步：选个倒霉蛋' : '等待房主选人...' }}
+              </h2>
+              <p class="text-xs text-gray-500 font-mono uppercase tracking-widest">Online Players: {{ players.length }}</p>
           </div>
 
           <div v-if="gamePhase === 'PICKING_PLAYER'" class="text-center">
-             <div class="text-7xl mb-6 animate-pulse">🕵️</div>
-             <h2 class="text-xl text-yellow-500 font-black animate-pulse tracking-widest">正在寻找幸运儿...</h2>
+              <div class="text-7xl mb-6 animate-pulse">🕵️</div>
+              <h2 class="text-xl text-yellow-500 font-black animate-pulse tracking-widest">正在寻找幸运儿...</h2>
           </div>
 
-          <div v-if="['PLAYER_LOCKED', 'SPINNING_PENALTY', 'SHOW_RESULT'].includes(gamePhase)" class="w-full h-full flex flex-col">
-             
-             <div class="flex flex-col items-center justify-center py-4 border-b border-gray-700/50 bg-gray-900/40 rounded-t-xl transition-all duration-500"
-                  :class="gamePhase === 'SHOW_RESULT' ? 'scale-90 opacity-60' : 'scale-110 my-auto'">
-               <div class="text-5xl mb-3 shadow-sm">{{ targetPlayer?.avatar || '👤' }}</div>
-               <div class="text-2xl font-black text-yellow-400 drop-shadow-md">
-                 {{ targetPlayer?.nickname || '未知玩家' }}
-               </div>
-               <div v-if="gamePhase === 'PLAYER_LOCKED'" class="text-sm text-gray-400 mt-2 animate-pulse font-bold">
-                   已被锁定，准备接招！
-               </div>
-             </div>
-
-             <div v-if="gamePhase === 'SPINNING_PENALTY'" class="flex-1 flex flex-col items-center justify-center">
-                <div class="text-6xl animate-spin mb-4">🎲</div>
-                <div class="text-pink-500 font-black text-lg tracking-widest">正在抽取题目...</div>
-             </div>
-
-             <div v-if="gamePhase === 'SHOW_RESULT'" class="flex-1 flex flex-col animate-fade-in-up overflow-hidden w-full">
-                <div class="flex justify-center gap-3 mt-4">
-                  <span :class="['px-3 py-1 rounded text-xs font-black shadow-md uppercase tracking-wider', currentPenalty.type === 'truth' ? 'bg-blue-600 text-white' : 'bg-red-600 text-white']">
-                    {{ currentPenalty.type === 'truth' ? '真心话' : '大冒险' }}
-                  </span>
-                  <span class="px-3 py-1 rounded text-xs font-bold bg-gray-700 text-gray-300 border border-gray-600 shadow-md flex items-center gap-1">
-                    📂 {{ currentPenalty.category ? currentPenalty.category.name : '系统' }}
-                  </span>
+          <div v-if="['PLAYER_LOCKED', 'SPINNING_PENALTY', 'SHOW_RESULT'].includes(gamePhase)" class="w-full h-full flex flex-col overflow-hidden">
+              
+              <div class="flex flex-col items-center justify-center py-4 border-b border-gray-700/50 bg-gray-900/40 rounded-t-xl transition-all duration-500 flex-shrink-0"
+                   :class="gamePhase === 'SHOW_RESULT' ? 'scale-90 opacity-60' : 'scale-110 my-auto'">
+                <div class="text-5xl mb-3 shadow-sm">{{ targetPlayer?.avatar || '👤' }}</div>
+                <div class="text-2xl font-black text-yellow-400 drop-shadow-md">
+                  {{ targetPlayer?.nickname || '未知玩家' }}
                 </div>
-
-                <div class="flex-1 flex items-center justify-center overflow-y-auto custom-scrollbar my-4 px-2">
-                  <p 
-                    :class="[
-                        'font-black text-white leading-tight drop-shadow-2xl break-words text-center transition-all duration-300',
-                        penaltyFontSizeClass
-                    ]"
-                  >
-                    “{{ currentPenalty.content }}”
-                  </p>
+                <div v-if="gamePhase === 'PLAYER_LOCKED'" class="text-sm text-gray-400 mt-2 animate-pulse font-bold">
+                    已被锁定，准备接招！
                 </div>
+              </div>
 
-                <div class="flex justify-between items-center w-full px-6 pb-4 text-[10px] text-gray-500 border-t border-gray-700/30 pt-3">
-                   <span class="flex items-center gap-1 font-bold">
-                     👤 贡献者: {{ currentPenalty.creator || '系统' }}
+              <div v-if="gamePhase === 'SPINNING_PENALTY'" class="flex-1 flex flex-col items-center justify-center">
+                 <div class="text-6xl animate-spin mb-4">🎲</div>
+                 <div class="text-pink-500 font-black text-lg tracking-widest">正在抽取题目...</div>
+              </div>
+
+              <div v-if="gamePhase === 'SHOW_RESULT'" class="flex-1 flex flex-col min-h-0 w-full animate-fade-in-up">
+                 <div class="flex justify-center gap-3 mt-4 flex-shrink-0">
+                   <span :class="['px-3 py-1 rounded text-xs font-black shadow-md uppercase tracking-wider', currentPenalty.type === 'truth' ? 'bg-blue-600 text-white' : 'bg-red-600 text-white']">
+                     {{ currentPenalty.type === 'truth' ? '真心话' : '大冒险' }}
                    </span>
-                   <span class="flex items-center gap-1 font-mono text-yellow-600 font-black text-xs">
-                     ⚡ LEVEL {{ currentPenalty.level }}
+                   <span class="px-3 py-1 rounded text-xs font-bold bg-gray-700 text-gray-300 border border-gray-600 shadow-md flex items-center gap-1">
+                     📂 {{ currentPenalty.category ? currentPenalty.category.name : '系统' }}
                    </span>
-                </div>
-             </div>
+                 </div>
+
+                 <div class="flex-1 overflow-y-auto custom-scrollbar my-4 px-6 flex flex-col min-h-0">
+                    <div class="my-auto py-2"> <p class="font-black text-white leading-relaxed drop-shadow-2xl break-words text-center text-2xl md:text-4xl">
+                        “{{ currentPenalty.content }}”
+                      </p>
+                    </div>
+                 </div>
+
+                 <div class="flex justify-between items-center w-full px-6 pb-4 text-[10px] text-gray-500 border-t border-gray-700/30 pt-3 flex-shrink-0">
+                    <span class="flex items-center gap-1 font-bold">
+                      👤 贡献者: {{ currentPenalty.creator || '系统' }}
+                    </span>
+                    <span class="flex items-center gap-1 font-mono text-yellow-600 font-black text-xs">
+                      ⚡ LEVEL {{ currentPenalty.level }}
+                    </span>
+                 </div>
+              </div>
           </div>
         </div>
 
@@ -104,7 +100,7 @@
               <button v-else-if="gamePhase === 'SHOW_RESULT'" @click="handleNextRound" class="px-10 py-4 bg-gray-700 hover:bg-gray-600 text-white rounded-full text-xl font-black shadow-lg hover:scale-105 active:scale-95 transition-all border-2 border-gray-600">🔄 下一轮</button>
             </div>
             <div v-else class="bg-gray-800/50 border border-gray-700 px-6 py-2 rounded-full text-gray-400 text-sm font-bold animate-pulse tracking-widest uppercase">
-               Waiting for host...
+                Waiting for host...
             </div>
         </div>
 
@@ -116,7 +112,7 @@
       <div class="w-full md:w-96 bg-[#0d0f14] flex flex-col h-[45%] md:h-full border-t md:border-t-0 border-gray-800 shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-20">
         <div class="p-3 border-b border-gray-800/50 bg-[#0d0f14]/80 backdrop-blur flex-shrink-0 flex items-center justify-between">
           <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Players Online ({{ players.length }})</span>
-          <div class="flex gap-2 overflow-x-auto max-w-[65%] custom-scrollbar pb-1 no-scrollbar">
+          <div class="flex gap-2 overflow-x-auto max-w-[65%] no-scrollbar pb-1">
               <span v-for="p in players" :key="p.id" class="text-[11px] bg-gray-800/80 px-2 py-1 rounded-lg border border-gray-700 whitespace-nowrap font-bold text-gray-300">
                 {{ p.avatar }} {{ p.nickname }}
               </span>
@@ -237,7 +233,7 @@ const route = useRoute();
 const router = useRouter();
 const roomId = route.params.id;
 
-// === 基础状态 ===
+// === 状态定义 ===
 const players = ref([]);
 const messages = ref([]);
 const inputMsg = ref('');
@@ -245,19 +241,16 @@ const chatBoxRef = ref(null);
 const poolCount = ref(0); 
 const isSpectator = ref(false); 
 
-// === 游戏逻辑状态 ===
 const gamePhase = ref('IDLE'); 
 const targetPlayerId = ref(null);
 const currentPenalty = ref(null);
 
-// === UI 状态 ===
 const showManager = ref(false);
 const managerFullPool = ref([]); 
 const tempActiveIds = ref([]); 
 const filterText = ref('');
 const expandedGroups = ref({});
 
-// === 通用模态框状态 ===
 const modal = ref({
   show: false,
   type: 'alert',
@@ -267,17 +260,6 @@ const modal = ref({
   confirmText: '确定',
   cancelText: '取消',
   onConfirm: null
-});
-
-// === 🟢 核心：动态字号计算 (适配手机端长文本) ===
-const penaltyFontSizeClass = computed(() => {
-  if (!currentPenalty.value) return 'text-2xl';
-  const len = currentPenalty.value.content.length;
-  // 根据字符数动态缩放
-  if (len > 60) return 'text-lg md:text-xl'; 
-  if (len > 40) return 'text-xl md:text-2xl';
-  if (len > 25) return 'text-2xl md:text-4xl';
-  return 'text-3xl md:text-5xl'; // 短句显示巨大
 });
 
 // === 计算属性 ===
@@ -307,7 +289,6 @@ const groupedPool = computed(() => {
   return groups;
 });
 
-// === 🟢 核心：东八区时间生成函数 ===
 const getBeijinTime = () => {
   return new Date().toLocaleTimeString('zh-CN', {
     hour12: false,
@@ -327,7 +308,7 @@ watch(filterText, (newVal) => {
   }
 });
 
-// === 弹窗辅助函数 ===
+// === 弹窗与逻辑处理 ===
 const showDialog = ({ title, content, icon = '🔔', type = 'alert', confirmText, cancelText, onConfirm }) => {
   modal.value = { show: true, title, content, icon, type, confirmText, cancelText, onConfirm };
 };
@@ -337,7 +318,6 @@ const handleModalConfirm = () => {
   modal.value.show = false;
 };
 
-// === 动作逻辑 ===
 const handlePickPlayer = () => { 
     if (players.value.length < 1) return showDialog({ title: '无法开始', content: '房间里目前只有你一个人哦。', icon: '💨' }); 
     socket.emit('pick_player', { roomId }); 
@@ -348,8 +328,6 @@ const handleNextRound = () => socket.emit('reset_turn', { roomId });
 const sendMessage = () => {
   if (isSpectator.value || !inputMsg.value.trim()) return;
   const me = players.value.find(p => p.id === socket.id);
-  
-  // 发送消息时携带东八区时间
   socket.emit('send_msg', { 
     roomId, 
     msg: inputMsg.value, 
@@ -418,7 +396,6 @@ function initGameData(data) {
   scrollToBottom();
 }
 
-// === 生命周期 ===
 onMounted(() => {
   if (route.query.spectate === 'true') {
     isSpectator.value = true;
@@ -449,16 +426,9 @@ onMounted(() => {
   
   document.title = `房间 ${roomId} | 正在游戏`;
 
-  // === Socket 监听 ===
   socket.on('room_joined', initGameData);
   socket.on('error_msg', (msg) => { 
-    showDialog({
-      title: '出错啦',
-      content: msg,
-      icon: '⚠️',
-      confirmText: '确定',
-      onConfirm: () => router.push(isSpectator.value ? '/admin' : '/')
-    });
+    showDialog({ title: '出错啦', content: msg, icon: '⚠️', onConfirm: () => router.push(isSpectator.value ? '/admin' : '/') });
   });
   
   socket.on('player_joined', (p) => { 
@@ -516,7 +486,6 @@ onUnmounted(() => {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #ec4899; }
 .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 
-/* 隐藏横向滚动条但保留功能 */
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 </style>
