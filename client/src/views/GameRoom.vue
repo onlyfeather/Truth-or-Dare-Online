@@ -78,7 +78,7 @@
 
               <div class="flex-1 overflow-y-auto custom-scrollbar my-2 px-6 flex flex-col min-h-0">
                   <div class="my-auto py-2">
-                    <p class="font-black text-white leading-relaxed drop-shadow-2xl break-words text-center text-xl md:text-3xl">
+                    <p class="font-black text-white leading-relaxed drop-shadow-2xl break-words text-center text-xl md:text-2xl">
                       “{{ currentPenalty.content }}”
                     </p>
                   </div>
@@ -131,23 +131,27 @@
             </div>
             
             <div v-else-if="getMsgType(msg) === 'others'" class="flex flex-col items-start">
-               <div class="flex items-baseline space-x-2 mb-1.5 ml-1">
-                 <span class="text-xs text-gray-500 font-black uppercase">{{ msg.nickname }}</span>
-                 <span class="text-[10px] text-gray-600 font-mono">{{ msg.time }}</span>
-               </div>
-               <div class="bg-gray-800 text-gray-100 px-4 py-2.5 rounded-2xl rounded-tl-none max-w-[92%] text-[15px] shadow-lg border border-gray-700/50 break-all leading-relaxed font-medium">
-                 {{ msg.text }}
-               </div>
+              <div class="flex items-center space-x-2 mb-1.5 ml-1">
+                <span class="text-xs text-gray-400 font-black uppercase">{{ msg.nickname }}</span>
+                <span class="text-[11px] text-gray-400 font-mono bg-white/5 px-1.5 py-0.5 rounded shadow-sm border border-white/5">
+                  {{ msg.time }}
+                </span>
+              </div>
+              <div class="bg-gray-800 text-gray-100 px-4 py-2.5 rounded-2xl rounded-tl-none max-w-[92%] text-[15px] shadow-lg border border-gray-700/50 break-all leading-relaxed font-medium">
+                {{ msg.text }}
+              </div>
             </div>
             
             <div v-else class="flex flex-col items-end">
-               <div class="flex items-baseline space-x-2 mb-1.5 mr-1 flex-row-reverse">
-                 <span class="text-xs text-pink-500 font-black uppercase ml-2">YOU</span>
-                 <span class="text-[10px] text-gray-600 font-mono mr-1">{{ msg.time }}</span>
-               </div>
-               <div class="bg-gradient-to-br from-pink-600 to-rose-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-none max-w-[92%] text-[15px] shadow-xl shadow-pink-900/10 break-all leading-relaxed font-bold">
-                 {{ msg.text }}
-               </div>
+              <div class="flex items-center space-x-2 mb-1.5 mr-1 flex-row-reverse">
+                <span class="text-xs text-pink-500 font-black uppercase ml-2">{{ msg.nickname }}</span>
+                <span class="text-[11px] text-pink-300/70 font-mono bg-pink-500/10 px-1.5 py-0.5 rounded shadow-sm border border-pink-500/10 mr-1">
+                  {{ msg.time }}
+                </span>
+              </div>
+              <div class="bg-gradient-to-br from-pink-600 to-rose-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-none max-w-[92%] text-[15px] shadow-xl shadow-pink-900/10 break-all leading-relaxed font-bold">
+                {{ msg.text }}
+              </div>
             </div>
           </div>
         </div>
