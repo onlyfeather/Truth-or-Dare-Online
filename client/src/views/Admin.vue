@@ -237,6 +237,7 @@ const inputPassword = ref('');
 const currentTab = ref('dashboard');
 const isLoading = ref(false);
 const toast = ref({ show: false, type: 'success', title: '', msg: '' });
+const totalCount = ref(0); // 新增：记录总题目数
 
 // 确认模态框状态
 const modal = ref({ 
@@ -276,6 +277,12 @@ const displayStats = computed(() => ({
 }));
 
 // --- 逻辑函数 ---
+
+// --- 2. 新增计算属性：总页数 ---
+const totalPages = computed(() => {
+  return Math.ceil(totalCount.value / pageSize) || 1;
+});
+
 
 // 1. 认证相关
 const handleLogin = async () => {
@@ -356,8 +363,15 @@ const fetchPenalties = async () => {
       deleted: isRecycleBin.value 
     };
     const res = await api.get('/admin/penalties', { params });
+    
     penalties.value = res.list || [];
-  } catch (e) {} finally { isLoading.value = false; }
+    totalCount.value = res.total || 0; // 🟢 关键：保存后端返回的总数
+    
+  } catch (e) {
+    showToast('error', '加载失败', '无法获取列表');
+  } finally { 
+    isLoading.value = false; 
+  }
 };
 
 // 4. 执行具体操作 (API 调用)
