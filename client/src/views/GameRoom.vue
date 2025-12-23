@@ -45,39 +45,44 @@
           </div>
 
           <div v-if="['PLAYER_LOCKED', 'SPINNING_PENALTY', 'SHOW_RESULT'].includes(gamePhase)" class="w-full h-full flex flex-col overflow-hidden">
-              
-              <div class="flex flex-col items-center justify-center py-4 border-b border-gray-700/50 bg-gray-900/40 rounded-t-xl transition-all duration-500 flex-shrink-0"
-                   :class="gamePhase === 'SHOW_RESULT' ? 'scale-90 opacity-60' : 'scale-110 my-auto'">
-                <div class="text-5xl mb-3 shadow-sm">{{ targetPlayer?.avatar || '👤' }}</div>
-                <div class="text-2xl font-black text-yellow-400 drop-shadow-md">
-                  {{ targetPlayer?.nickname || '未知玩家' }}
-                </div>
-                <div v-if="gamePhase === 'PLAYER_LOCKED'" class="text-sm text-gray-400 mt-2 animate-pulse font-bold">
-                    已被锁定，准备接招！
-                </div>
+    
+            <div class="flex flex-col items-center justify-center border-b border-gray-700/30 bg-gray-900/30 rounded-t-xl transition-all duration-500 flex-shrink-0"
+                :class="[
+                  gamePhase === 'SHOW_RESULT' ? 'py-2 md:py-3 opacity-60' : 'py-8 my-auto',
+                ]">
+              <div :class="[gamePhase === 'SHOW_RESULT' ? 'text-2xl md:text-3xl mb-1' : 'text-6xl mb-4']" class="transition-all duration-500">
+                {{ targetPlayer?.avatar || '👤' }}
+              </div>
+              <div :class="[gamePhase === 'SHOW_RESULT' ? 'text-sm md:text-lg' : 'text-2xl']" class="font-black text-yellow-400 drop-shadow-md transition-all duration-500">
+                {{ targetPlayer?.nickname || '未知玩家' }}
+              </div>
+              <div v-if="gamePhase === 'PLAYER_LOCKED'" class="text-xs text-gray-400 mt-2 animate-pulse font-bold uppercase tracking-tighter">
+                  已被锁定，准备接招！
+              </div>
+            </div>
+
+            <div v-if="gamePhase === 'SPINNING_PENALTY'" class="flex-1 flex flex-col items-center justify-center">
+              <div class="text-5xl animate-spin mb-4">🎲</div>
+              <div class="text-pink-500 font-black text-sm tracking-widest">正在抽取题目...</div>
+            </div>
+
+            <div v-if="gamePhase === 'SHOW_RESULT'" class="flex-1 flex flex-col min-h-0 w-full animate-fade-in-up">
+              <div class="flex justify-center gap-2 mt-3 flex-shrink-0">
+                <span :class="['px-2.5 py-0.5 rounded text-[10px] md:text-xs font-black shadow-md uppercase tracking-wider', currentPenalty.type === 'truth' ? 'bg-blue-600 text-white' : 'bg-red-600 text-white']">
+                  {{ currentPenalty.type === 'truth' ? '真心话' : '大冒险' }}
+                </span>
+                <span class="px-2.5 py-0.5 rounded text-[10px] md:text-xs font-bold bg-gray-700 text-gray-300 border border-gray-600 shadow-md flex items-center gap-1">
+                  📂 {{ currentPenalty.category ? currentPenalty.category.name : '系统' }}
+                </span>
               </div>
 
-              <div v-if="gamePhase === 'SPINNING_PENALTY'" class="flex-1 flex flex-col items-center justify-center">
-                 <div class="text-6xl animate-spin mb-4">🎲</div>
-                 <div class="text-pink-500 font-black text-lg tracking-widest">正在抽取题目...</div>
+              <div class="flex-1 overflow-y-auto custom-scrollbar my-2 px-6 flex flex-col min-h-0">
+                  <div class="my-auto py-2">
+                    <p class="font-black text-white leading-relaxed drop-shadow-2xl break-words text-center text-xl md:text-3xl">
+                      “{{ currentPenalty.content }}”
+                    </p>
+                  </div>
               </div>
-
-              <div v-if="gamePhase === 'SHOW_RESULT'" class="flex-1 flex flex-col min-h-0 w-full animate-fade-in-up">
-                 <div class="flex justify-center gap-3 mt-4 flex-shrink-0">
-                   <span :class="['px-3 py-1 rounded text-xs font-black shadow-md uppercase tracking-wider', currentPenalty.type === 'truth' ? 'bg-blue-600 text-white' : 'bg-red-600 text-white']">
-                     {{ currentPenalty.type === 'truth' ? '真心话' : '大冒险' }}
-                   </span>
-                   <span class="px-3 py-1 rounded text-xs font-bold bg-gray-700 text-gray-300 border border-gray-600 shadow-md flex items-center gap-1">
-                     📂 {{ currentPenalty.category ? currentPenalty.category.name : '系统' }}
-                   </span>
-                 </div>
-
-                 <div class="flex-1 overflow-y-auto custom-scrollbar my-4 px-6 flex flex-col min-h-0">
-                    <div class="my-auto py-2"> <p class="font-black text-white leading-relaxed drop-shadow-2xl break-words text-center text-2xl md:text-4xl">
-                        “{{ currentPenalty.content }}”
-                      </p>
-                    </div>
-                 </div>
 
                  <div class="flex justify-between items-center w-full px-6 pb-4 text-[10px] text-gray-500 border-t border-gray-700/30 pt-3 flex-shrink-0">
                     <span class="flex items-center gap-1 font-bold">
